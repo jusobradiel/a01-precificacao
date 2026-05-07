@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+{% set active = 'protocolos' %}
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">{{ protocolo.nome if protocolo else 'Novo protocolo' }}</div>
+    <div class="topbar-sub">{{ 'Editar protocolo' if protocolo else 'Preencha os dados e adicione os insumos utilizados' }}</div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <a href="/protocolos" class="btn">← Voltar</a>
+    {% if protocolo %}
+    <form method="POST" action="/protocolos/deletar/{{ protocolo.id }}" onsubmit="return confirm('Remover este protocolo?')">
+      <button type="submit" class="btn btn-danger">Remover</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+<div class="page">
+  <form method="POST" action="{{ '/protocolos/' + protocolo.id|string if protocolo else '/protocolos/novo' }}" id="form-protocolo">
+
+    <!-- NOME -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Identificação</span></div>
+      <div class="card-body">
+        <div class="field" style="margin-bottom:0">
+          <label>Nome do protocolo ou produto</label>
+          <input type="text" name="nome" value="{{ protocolo.nome if protocolo else '' }}" placeholder="Ex: Lipedema Ouro" required>
+        </div>
+      </div>
+    </div>
+
+    <!-- INSUMOS -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Composição — insumos utilizados</span>
+        <button type="button" class="btn btn-sm" onclick="addInsumoRow()">+ Adicionar insumo</button>
+      </div>
+      <div class="card-body" id="insumos-container">
+        <!-- Hora clínica -->
+        {% if hora_insumo %}
+        <div class="insumo-row" id="hora-row">
+          <div style="display:flex;align-items:center;gap:8px">
+            <input type="hidden" name="insumo_id" value="{{ hora_insumo.id }}">
+            <span style="font-size:13px;font-weight:500">Hora clínica</span>
+            <span class="badge badge-green">automático — R$ {{ "%.2f"|format(hora) }}</span>
+          </div>
+          <input type="number" name="quantidade_usada" value="{{ itens|selectattr('insumo_id','eq',hora_insumo.id)|map(attribute='quantidade_usada')|first|default(0) }}" step="0.5" min="0" placeholder="0" style="text-align:right">
+          <div></div>
+        </div>
+        <hr class="divider">
+        {% endif %}
+
+        <!-- Outros insumos -->
+        <div id="insumo-rows">
+          {% for item in itens %}
+          {% if item.nome != '__hora_clinica__' %}
+          <div class="insumo-row">
+            <select name="insumo_id" onchange="updateCusto(this)">
+              <option value="">Selecionar insumo...</option>
+              {% for ins in insumos %}
+              <option value="{{ ins.id }}" data-custo="{{ ins.custo_unitario }}" {% if ins.id == item.insumo_id %}selected{% endif %}>{{ ins.nome }}</option>
+              {% endfor %}
+            </select>
+            <input type="number" name="quantidade_usada" value="{{ item.quantidade_usada }}" step="0.5" min="0" placeholder="qtd" style="text-align:right">
+            <button type="button" class="line-remove" onclick="this.parentElement.remove()">×</button>
+          </div>
+          {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if not itens %}
+        <div id="empty-hint" style="font-size:12px;color:var(--text-faint);padding:8px 0">Nenhum insumo adicionado. Clique em "Adicionar insumo" acima.</div>
+        {% endif %}
+      </div>
+
+      <!-- CUSTO TOTAL AO VIVO -->
+      <div style="padding:12px 20px;border-top:1px solid var(--border);background:var(--bg);display:flex;justify-content:flex-end;align-items:center;gap:8px">
+        <span style="font-size:12px;color:var(--text-muted)">Custo total do protocolo:</span>
+        <span style="font-size:16px;font-weight:600;font-family:'DM Mono',monospace;color:var(--brand)" id="custo-total">
+          R$ {{ "%.2f"|format(custo if custo is defined else 0) }}
+        </span>
+      </div>
+    </div>
+
+    <!-- CENÁRIOS DE PREÇO -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Cenários de venda</span></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+          {% for i in range(1,4) %}
+          {% set c_nome = ['cenario1_nome','cenario2_nome','cenario3_nome'][i-1] %}
+          {% set c_preco = ['cenario1_preco','cenario2_preco','cenario3_preco'][i-1] %}
+          {% set default_nome = ['Pix / Dinheiro','Cartão à vista','Parcelado'][i-1] %}
+          <div style="background:var(--bg);border-radius:var(--radius);padding:14px 16px">
+            <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Cenário {{ i }}</div>
+            <div class="field mb-8">
+              <label>Nome</label>
+              <input type="text" name="{{ c_nome }}" value="{{ protocolo[c_nome] if protocolo else default_nome }}" placeholder="{{ default_nome }}">
+            </div>
+            <div class="field" style="margin-bottom:0">
+              <label>Preço de venda (R$)</label>
+              <input type="number" name="{{ c_preco }}" value="{{ protocolo[c_preco] if protocolo else 0 }}" step="0.01" min="0" oninput="calcMargens()" class="preco-input">
+            </div>
+            <div style="margin-top:8px;font-size:12px;color:var(--text-muted)">
+              Lucro bruto: <strong class="lucro-val" style="font-family:'DM Mono',monospace">—</strong>
+            </div>
+            <div style="margin-top:2px;font-size:12px;color:var(--text-muted)">
+              Margem: <strong class="margem-val" style="font-family:'DM Mono',monospace">—</strong>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- CARTÃO + IMPOSTO -->
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <span class="card-title">Cartão + imposto</span>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Opcional — percentual descontado do valor de venda</div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="field" style="max-width:200px;margin-bottom:0">
+          <label>Taxa cartão + imposto (%)</label>
+          <input type="number" name="cartao_imposto_pct" value="{{ protocolo.cartao_imposto_pct if protocolo else 0 }}" step="0.1" min="0" max="100" placeholder="Ex: 18">
+        </div>
+      </div>
+    </div>
+
+    <div class="flex-end">
+      <a href="/protocolos" class="btn">Cancelar</a>
+      <button type="submit" class="btn btn-primary">Salvar protocolo</button>
+    </div>
+  </form>
+</div>
+
+<script>
+const insumos = {{ insumos | tojson }};
+const hora = {{ hora }};
+const horaInsumoId = {{ hora_insumo.id if hora_insumo else 'null' }};
+
+function addInsumoRow() {
+  document.getElementById('empty-hint') && (document.getElementById('empty-hint').style.display = 'none');
+  const div = document.createElement('div');
+  div.className = 'insumo-row';
+  const opts = insumos.map(i => `<option value="${i.id}" data-custo="${i.custo_unitario}">${i.nome}</option>`).join('');
+  div.innerHTML = `<select name="insumo_id" onchange="updateCusto(this)"><option value="">Selecionar insumo...</option>${opts}</select>
+    <input type="number" name="quantidade_usada" value="1" step="0.5" min="0" placeholder="qtd" style="text-align:right">
+    <button type="button" class="line-remove" onclick="this.parentElement.remove();calcMargens()">×</button>`;
+  document.getElementById('insumo-rows').appendChild(div);
+}
+
+function updateCusto(sel) { calcMargens(); }
+
+function getCustoTotal() {
+  let total = 0;
+  // Hora clínica
+  const horaRow = document.getElementById('hora-row');
+  if (horaRow) {
+    const qtdHora = parseFloat(horaRow.querySelector('input[name=quantidade_usada]').value) || 0;
+    total += hora * qtdHora;
+  }
+  // Outros insumos
+  document.querySelectorAll('#insumo-rows .insumo-row').forEach(row => {
+    const sel = row.querySelector('select');
+    const qtd = parseFloat(row.querySelector('input[type=number]').value) || 0;
+    if (sel && sel.value) {
+      const opt = sel.options[sel.selectedIndex];
+      const custo = parseFloat(opt.dataset.custo) || 0;
+      total += custo * qtd;
+    }
+  });
+  return total;
+}
+
+function calcMargens() {
+  const custo = getCustoTotal();
+  document.getElementById('custo-total').textContent = 'R$ ' + custo.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  document.querySelectorAll('.preco-input').forEach((input, i) => {
+    const preco = parseFloat(input.value) || 0;
+    const container = input.closest('div[style]');
+    const mEl = container.querySelector('.margem-val');
+    const lEl = container.querySelector('.lucro-val');
+    if (preco > 0) {
+      const lucro = preco - custo;
+      const m = (lucro / preco * 100);
+      const color = m >= 0 ? '#0a5c3e' : 'var(--danger)';
+      if (lEl) { lEl.textContent = 'R$ ' + lucro.toFixed(2).replace('.', ','); lEl.style.color = color; }
+      if (mEl) { mEl.textContent = m.toFixed(1) + '%'; mEl.style.color = color; }
+    } else {
+      if (lEl) { lEl.textContent = '—'; lEl.style.color = 'var(--text-faint)'; }
+      if (mEl) { mEl.textContent = '—'; mEl.style.color = 'var(--text-faint)'; }
+    }
+  });
+}
+
+// Adicionar listener de quantidade na hora clínica
+const horaRow = document.getElementById('hora-row');
+if (horaRow) {
+  horaRow.querySelector('input').addEventListener('input', calcMargens);
+}
+document.getElementById('insumo-rows').addEventListener('input', calcMargens);
+calcMargens();
+</script>
+{% endblock %}

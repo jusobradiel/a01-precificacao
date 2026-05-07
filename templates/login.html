@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block auth %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">A'01</div>
+    <div class="auth-tagline">Sistema de precificação</div>
+    <div class="auth-title">Entrar na sua conta</div>
+    {% if erro %}
+    <div class="alert alert-error">{{ erro }}</div>
+    {% endif %}
+    <form method="POST">
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" name="email" placeholder="seu@email.com" required autofocus>
+      </div>
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" name="senha" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px">Entrar</button>
+    </form>
+    <div class="auth-footer">
+      Ainda não tem conta? <a href="/cadastro">Criar conta</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

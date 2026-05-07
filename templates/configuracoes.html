@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% set active = 'config' %}
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Configurações da clínica</div>
+    <div class="topbar-sub">Custos mensais e cálculo automático da hora clínica</div>
+  </div>
+</div>
+<div class="page">
+  <form method="POST" action="/configuracoes/salvar" id="form-config">
+
+    <!-- CUSTOS FIXOS -->
+    <div class="card">
+      <div class="expand-header" onclick="toggle('fixo', this)">
+        <div class="expand-left">
+          <div class="expand-icon-wrap" style="background:#E1F5EE">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#0a5c3e" stroke-width="1.5"><rect x="2" y="7" width="12" height="7" rx="1"/><path d="M5 7V5a3 3 0 016 0v2"/></svg>
+          </div>
+          <div>
+            <div class="expand-title">Custos fixos</div>
+            <div style="font-size:11px;color:var(--text-muted)">Aluguel, salários, contas mensais</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div><span class="expand-total-label">Total</span><span class="expand-total" id="total-fixo">R$ {{ "%.2f"|format(fixos|sum(attribute='valor')) }}</span></div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+      </div>
+      <div class="expand-body open" id="body-fixo">
+        <div id="lines-fixo">
+          {% for f in fixos %}
+          <div class="line-item">
+            <input type="text" name="fixo_desc" value="{{ f.descricao }}" placeholder="Descrição">
+            <input type="number" name="fixo_val" value="{{ f.valor }}" step="0.01" min="0" oninput="recalc()" placeholder="0,00">
+            <button type="button" class="line-remove" onclick="removeLine(this,'fixo')">×</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="button" class="add-line-btn" onclick="addLine('fixo')">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+          Adicionar item
+        </button>
+        <div class="subtotal-row">Subtotal fixos <span class="subtotal-val" id="sub-fixo">R$ {{ "%.2f"|format(fixos|sum(attribute='valor')) }}</span></div>
+      </div>
+    </div>
+
+    <!-- CUSTOS VARIÁVEIS -->
+    <div class="card">
+      <div class="expand-header" onclick="toggle('var', this)">
+        <div class="expand-left">
+          <div class="expand-icon-wrap" style="background:#FAEEDA">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#854F0B" stroke-width="1.5"><path d="M2 12s2-4 6-4 6-4 6-4"/><circle cx="8" cy="8" r="1.5" fill="#854F0B" stroke="none"/></svg>
+          </div>
+          <div>
+            <div class="expand-title">Custos variáveis</div>
+            <div style="font-size:11px;color:var(--text-muted)">Materiais, comissões, laboratório</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div><span class="expand-total-label">Total</span><span class="expand-total" id="total-var">R$ {{ "%.2f"|format(variaveis|sum(attribute='valor')) }}</span></div>
+          <svg class="chevron" width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 6l4 4 4-4"/></svg>
+        </div>
+      </div>
+      <div class="expand-body open" id="body-var">
+        <div id="lines-var">
+          {% for v in variaveis %}
+          <div class="line-item">
+            <input type="text" name="var_desc" value="{{ v.descricao }}" placeholder="Descrição">
+            <input type="number" name="var_val" value="{{ v.valor }}" step="0.01" min="0" oninput="recalc()" placeholder="0,00">
+            <button type="button" class="line-remove" onclick="removeLine(this,'var')">×</button>
+          </div>
+          {% endfor %}
+        </div>
+        <button type="button" class="add-line-btn" onclick="addLine('var')">
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3v10M3 8h10"/></svg>
+          Adicionar item
+        </button>
+        <div class="subtotal-row">Subtotal variáveis <span class="subtotal-val" id="sub-var">R$ {{ "%.2f"|format(variaveis|sum(attribute='valor')) }}</span></div>
+      </div>
+    </div>
+
+    <!-- PRÓ-LABORE / LUCRO / HORAS -->
+    <div class="card">
+      <div class="card-header"><span class="card-title">Remuneração e metas</span></div>
+      <div class="card-body">
+        <div class="field-row-3">
+          <div class="field" style="margin-bottom:0">
+            <label>Pró-labore mensal (R$)</label>
+            <input type="number" name="pro_labore" id="pro_labore" value="{{ cfg.pro_labore if cfg else 0 }}" step="0.01" min="0" oninput="recalc()">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Lucro desejado (%)</label>
+            <input type="number" name="lucro_desejado" id="lucro_desejado" value="{{ cfg.lucro_desejado if cfg else 0 }}" step="0.1" min="0" oninput="recalc()">
+          </div>
+          <div class="field" style="margin-bottom:0">
+            <label>Horas clínicas por mês</label>
+            <input type="number" name="horas_mes" id="horas_mes" value="{{ cfg.horas_mes if cfg else 0 }}" step="0.5" min="0.5" oninput="recalc()">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RESULTADO -->
+    <div class="result-box">
+      <div class="left">
+        <div class="title">Valor mínimo da hora clínica</div>
+        <div class="sub">Calculado automaticamente a partir de todos os custos</div>
+      </div>
+      <div class="value" id="valor-hora">R$ {{ "%.2f"|format(hora) }}</div>
+    </div>
+
+    <div class="flex-end" style="margin-top:20px">
+      <button type="submit" class="btn btn-primary">Salvar configurações</button>
+    </div>
+  </form>
+</div>
+
+<script>
+function fmt(v) {
+  return 'R$ ' + v.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+function sumSection(id) {
+  let t = 0;
+  document.querySelectorAll('#lines-' + id + ' input[type=number]').forEach(i => t += parseFloat(i.value) || 0);
+  return t;
+}
+function recalc() {
+  const fixo = sumSection('fixo');
+  const vari = sumSection('var');
+  const pro = parseFloat(document.getElementById('pro_labore').value) || 0;
+  const lucro = parseFloat(document.getElementById('lucro_desejado').value) || 0;
+  const horas = parseFloat(document.getElementById('horas_mes').value) || 1;
+  document.getElementById('total-fixo').textContent = fmt(fixo);
+  document.getElementById('sub-fixo').textContent = fmt(fixo);
+  document.getElementById('total-var').textContent = fmt(vari);
+  document.getElementById('sub-var').textContent = fmt(vari);
+  const total = (fixo + vari + pro) * (1 + lucro / 100);
+  document.getElementById('valor-hora').textContent = fmt(total / horas);
+}
+function toggle(id, header) {
+  const body = document.getElementById('body-' + id);
+  const chev = header.querySelector('.chevron');
+  body.classList.toggle('open');
+  chev.style.transform = body.classList.contains('open') ? '' : 'rotate(-90deg)';
+}
+function addLine(section) {
+  const container = document.getElementById('lines-' + section);
+  const div = document.createElement('div');
+  div.className = 'line-item';
+  const nameAttr = section === 'fixo' ? 'fixo_desc' : 'var_desc';
+  const valAttr = section === 'fixo' ? 'fixo_val' : 'var_val';
+  div.innerHTML = `<input type="text" name="${nameAttr}" placeholder="Descrição">
+    <input type="number" name="${valAttr}" value="0" step="0.01" min="0" oninput="recalc()" placeholder="0,00">
+    <button type="button" class="line-remove" onclick="removeLine(this,'${section}')">×</button>`;
+  container.appendChild(div);
+}
+function removeLine(btn, section) {
+  btn.parentElement.remove();
+  recalc();
+}
+</script>
+{% endblock %}

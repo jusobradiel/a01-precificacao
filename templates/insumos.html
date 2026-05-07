@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% set active = 'insumos' %}
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Insumos</div>
+    <div class="topbar-sub">Matérias-primas e materiais utilizados nos protocolos</div>
+  </div>
+  <button class="btn btn-primary" onclick="openModal()">+ Novo insumo</button>
+</div>
+<div class="page">
+
+  <div class="card mb-16">
+    <div class="card-header">
+      <div>
+        <div class="card-title">Hora clínica</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Calculada automaticamente nas configurações</div>
+      </div>
+      <div style="font-size:20px;font-weight:600;font-family:'DM Mono',monospace;color:var(--brand)">
+        R$ {{ "%.2f"|format(hora) }}
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      {% if insumos %}
+      <table>
+        <thead>
+          <tr>
+            <th>Matéria-prima</th>
+            <th>Medida</th>
+            <th style="text-align:right">Quantidade</th>
+            <th style="text-align:right">Custo unit.</th>
+            <th style="text-align:right">Custo total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for i in insumos %}
+          {% set custo_total = i.custo_unitario * i.quantidade %}
+          <tr>
+            <td><strong>{{ i.nome }}</strong></td>
+            <td>{{ i.unidade or '—' }}</td>
+            <td style="text-align:right">{{ i.quantidade|int if i.quantidade == i.quantidade|int else i.quantidade }}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace">R$ {{ "%.2f"|format(i.custo_unitario) }}</td>
+            <td style="text-align:right;font-family:'DM Mono',monospace">R$ {{ "%.2f"|format(custo_total) }}</td>
+            <td>
+              <div class="td-actions">
+                <button class="btn btn-sm btn-ghost" onclick="openEdit({{ i.id }}, '{{ i.nome|e }}', '{{ i.unidade|e }}', {{ i.quantidade }}, {{ i.custo_unitario * i.quantidade }})">Editar</button>
+                <form method="POST" action="/insumos/deletar/{{ i.id }}" onsubmit="return confirm('Remover {{ i.nome }}?')">
+                  <button type="submit" class="btn btn-sm btn-danger">Remover</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto;color:var(--text-faint)"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        <p>Nenhum insumo cadastrado ainda.</p>
+        <button class="btn btn-primary" style="margin-top:12px" onclick="openModal()">+ Adicionar primeiro insumo</button>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div id="modal-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--radius);padding:28px;width:100%;max-width:460px;border:1px solid var(--border)">
+    <div style="font-size:15px;font-weight:600;margin-bottom:20px" id="modal-title">Novo insumo</div>
+    <form method="POST" action="/insumos/salvar" id="form-insumo">
+      <input type="hidden" name="id" id="modal-id">
+      <input type="hidden" name="custo_unitario" id="modal-custo-unit">
+
+      <div class="field">
+        <label>Matéria-prima</label>
+        <input type="text" name="nome" id="modal-nome" placeholder="Ex: Luvas cirúrgicas" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field" style="margin-bottom:0">
+          <label>Medida</label>
+          <input type="text" name="unidade" id="modal-unidade" placeholder="Ex: unidade, ml, kg">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Quantidade na embalagem</label>
+          <input type="number" name="quantidade" id="modal-qtd" value="1" step="1" min="1" oninput="calcUnit()">
+        </div>
+      </div>
+
+      <div class="field" style="margin-top:14px">
+        <label>Custo total da embalagem (R$)</label>
+        <input type="number" id="modal-custo-total" value="0" step="0.01" min="0" oninput="calcUnit()" placeholder="Ex: 29,00">
+      </div>
+
+      <div style="background:var(--bg);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--text-muted)">Custo por unidade (calculado automaticamente)</span>
+        <span style="font-size:16px;font-weight:600;font-family:'DM Mono',monospace;color:var(--brand)" id="modal-custo-exibido">R$ 0,00</span>
+      </div>
+
+      <div class="flex-end">
+        <button type="button" class="btn" onclick="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function calcUnit() {
+  const qtd = parseFloat(document.getElementById('modal-qtd').value) || 1;
+  const total = parseFloat(document.getElementById('modal-custo-total').value) || 0;
+  const unit = qtd > 0 ? total / qtd : 0;
+  document.getElementById('modal-custo-unit').value = unit.toFixed(6);
+  document.getElementById('modal-custo-exibido').textContent = 'R$ ' + unit.toFixed(2).replace('.', ',');
+}
+function openModal() {
+  document.getElementById('modal-title').textContent = 'Novo insumo';
+  document.getElementById('modal-id').value = '';
+  document.getElementById('modal-nome').value = '';
+  document.getElementById('modal-unidade').value = '';
+  document.getElementById('modal-qtd').value = 1;
+  document.getElementById('modal-custo-total').value = 0;
+  calcUnit();
+  document.getElementById('modal-overlay').style.display = 'flex';
+  setTimeout(() => document.getElementById('modal-nome').focus(), 50);
+}
+function openEdit(id, nome, unidade, qtd, custoTotal) {
+  document.getElementById('modal-title').textContent = 'Editar insumo';
+  document.getElementById('modal-id').value = id;
+  document.getElementById('modal-nome').value = nome;
+  document.getElementById('modal-unidade').value = unidade;
+  document.getElementById('modal-qtd').value = qtd;
+  document.getElementById('modal-custo-total').value = custoTotal.toFixed(2);
+  calcUnit();
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+}
+document.getElementById('modal-overlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% set active = '' %}
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Alterar senha</div>
+    <div class="topbar-sub">Atualize a senha da sua conta</div>
+  </div>
+</div>
+<div class="page">
+  <div class="card" style="max-width:460px">
+    <div class="card-header"><span class="card-title">Nova senha</span></div>
+    <div class="card-body">
+      {% if erro %}<div class="alert alert-error">{{ erro }}</div>{% endif %}
+      {% if sucesso %}<div class="alert alert-success">{{ sucesso }}</div>{% endif %}
+      <form method="POST">
+        <div class="field">
+          <label>Senha atual</label>
+          <input type="password" name="senha_atual" required>
+        </div>
+        <div class="field">
+          <label>Nova senha</label>
+          <input type="password" name="senha_nova" required minlength="6">
+        </div>
+        <div class="field">
+          <label>Confirmar nova senha</label>
+          <input type="password" name="senha_confirma" required minlength="6">
+        </div>
+        <div class="flex-end">
+          <a href="/protocolos" class="btn">Cancelar</a>
+          <button type="submit" class="btn btn-primary">Salvar nova senha</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

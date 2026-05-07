@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% set active = 'protocolos' %}
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Protocolos</div>
+    <div class="topbar-sub">Seus produtos e serviços com análise de custo e margem</div>
+  </div>
+  <a href="/protocolos/novo" class="btn btn-primary">+ Novo protocolo</a>
+</div>
+<div class="page">
+
+  {% set melhor = namespace(nome='—', margem=-999) %}
+  {% for p in protocolos %}
+    {% set m1 = ((p.cenario1_preco - p.custo) / p.cenario1_preco * 100) if p.cenario1_preco > 0 else -999 %}
+    {% set m2 = ((p.cenario2_preco - p.custo) / p.cenario2_preco * 100) if p.cenario2_preco > 0 else -999 %}
+    {% set m3 = ((p.cenario3_preco - p.custo) / p.cenario3_preco * 100) if p.cenario3_preco > 0 else -999 %}
+    {% set melhor_p = [m1, m2, m3]|max %}
+    {% if melhor_p > melhor.margem %}
+      {% set melhor.margem = melhor_p %}
+      {% set melhor.nome = p.nome %}
+    {% endif %}
+  {% endfor %}
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Total de protocolos</div>
+      <div class="metric-value">{{ protocolos|length }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Hora clínica mínima</div>
+      <div class="metric-value">R$ {{ "%.2f"|format(hora) }}</div>
+      <div class="metric-hint">Calculada nas configurações</div>
+    </div>
+    <div class="metric" style="border-left: 3px solid #5DCAA5">
+      <div class="metric-label">Melhor protocolo</div>
+      <div class="metric-value" style="font-size:16px;line-height:1.3">{{ melhor.nome }}</div>
+      {% if melhor.margem > -999 %}
+      <div class="metric-hint" style="color:#0a5c3e;font-weight:500">{{ "%.1f"|format(melhor.margem) }}% de margem</div>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if protocolos %}
+  <div class="protocol-grid">
+    {% for p in protocolos %}
+    <a href="/protocolos/{{ p.id }}" class="protocol-card">
+      <div class="protocol-card-name">{{ p.nome }}</div>
+      <div class="protocol-card-meta">{{ p.count }} insumo(s) · custo R$ {{ "%.2f"|format(p.custo) }}</div>
+      <div class="protocol-scenarios">
+        {% for c_nome, c_preco in [(p.cenario1_nome, p.cenario1_preco), (p.cenario2_nome, p.cenario2_preco), (p.cenario3_nome, p.cenario3_preco)] %}
+        {% set lucro = c_preco - p.custo %}
+        {% set margem = (lucro / c_preco * 100) if c_preco > 0 else 0 %}
+        <div class="scenario">
+          <div class="scenario-label" title="{{ c_nome }}">{{ c_nome }}</div>
+          <div class="scenario-price">R$ {{ "%.0f"|format(c_preco) }}</div>
+          {% if c_preco > 0 %}
+          <div style="font-size:10px;color:var(--text-faint);margin-top:1px">Lucro R$ {{ "%.0f"|format(lucro) }}</div>
+          <div class="scenario-margin {% if margem >= 0 %}margin-pos{% else %}margin-neg{% endif %}">
+            {{ "%.1f"|format(margem) }}% margem
+          </div>
+          {% else %}
+          <div class="scenario-margin" style="color:var(--text-faint)">—</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+    </a>
+    {% endfor %}
+    <a href="/protocolos/novo" class="add-protocol-card">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 3v10M3 8h10"/></svg>
+      Novo protocolo
+    </a>
+  </div>
+  {% else %}
+  <div class="card">
+    <div class="empty-state">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto;color:var(--text-faint)"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+      <p>Nenhum protocolo cadastrado ainda.<br>Comece criando seu primeiro produto ou serviço.</p>
+      <a href="/protocolos/novo" class="btn btn-primary" style="margin-top:12px">+ Criar primeiro protocolo</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

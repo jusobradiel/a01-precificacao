@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% set active = 'admin' %}
+{% block content %}
+<div class="topbar">
+  <div>
+    <div class="topbar-title">Painel Admin — A'01</div>
+    <div class="topbar-sub">Todos os clientes cadastrados</div>
+  </div>
+</div>
+<div class="page">
+  <div class="metrics" style="grid-template-columns: repeat(2,1fr);max-width:500px;margin-bottom:24px">
+    <div class="metric">
+      <div class="metric-label">Total de clientes</div>
+      <div class="metric-value">{{ clientes|length }}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Total de protocolos</div>
+      <div class="metric-value">{{ clientes|sum(attribute='n_protocolos') }}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="table-wrap">
+      {% if clientes %}
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th style="text-align:center">Protocolos</th>
+            <th style="text-align:center">Insumos</th>
+            <th>Cadastro</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for c in clientes %}
+          <tr>
+            <td><strong>{{ c.nome }}</strong></td>
+            <td style="color:var(--text-muted)">{{ c.email }}</td>
+            <td style="text-align:center">{{ c.n_protocolos }}</td>
+            <td style="text-align:center">{{ c.n_insumos }}</td>
+            <td style="color:var(--text-muted);font-size:12px">{{ c.criado_em[:10] if c.criado_em else '—' }}</td>
+            <td>
+              <div class="td-actions">
+                <a href="/admin/exportar/{{ c.id }}" class="btn btn-sm btn-primary">↓ Excel</a>
+                <button class="btn btn-sm" onclick="openReset({{ c.id }}, '{{ c.nome|e }}')">Resetar senha</button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty-state"><p>Nenhum cliente cadastrado ainda.</p></div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- MODAL RESET SENHA -->
+<div id="modal-reset" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;align-items:center;justify-content:center">
+  <div style="background:var(--surface);border-radius:var(--radius);padding:28px;width:100%;max-width:400px;border:1px solid var(--border)">
+    <div style="font-size:15px;font-weight:600;margin-bottom:6px">Resetar senha</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:20px" id="reset-nome"></div>
+    <form method="POST" id="form-reset">
+      <div class="field">
+        <label>Nova senha para o cliente</label>
+        <input type="password" name="nova_senha" id="reset-senha" minlength="6" required placeholder="mínimo 6 caracteres">
+      </div>
+      <div class="flex-end">
+        <button type="button" class="btn" onclick="closeReset()">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar nova senha</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openReset(id, nome) {
+  document.getElementById('reset-nome').textContent = 'Cliente: ' + nome;
+  document.getElementById('form-reset').action = '/admin/resetar-senha/' + id;
+  document.getElementById('reset-senha').value = '';
+  document.getElementById('modal-reset').style.display = 'flex';
+}
+function closeReset() {
+  document.getElementById('modal-reset').style.display = 'none';
+}
+document.getElementById('modal-reset').addEventListener('click', function(e) {
+  if (e.target === this) closeReset();
+});
+</script>
+{% endblock %}

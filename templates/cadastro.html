@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block auth %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo">A'01</div>
+    <div class="auth-tagline">Sistema de precificação</div>
+    <div class="auth-title">Criar sua conta</div>
+    {% if erro %}
+    <div class="alert alert-error">{{ erro }}</div>
+    {% endif %}
+    <form method="POST">
+      <div class="field">
+        <label>Nome completo</label>
+        <input type="text" name="nome" placeholder="Dra. Jéssica Silva" required autofocus>
+      </div>
+      <div class="field">
+        <label>E-mail</label>
+        <input type="email" name="email" placeholder="seu@email.com" required>
+      </div>
+      <div class="field">
+        <label>Senha <span style="color:var(--text-faint)">(mínimo 6 caracteres)</span></label>
+        <input type="password" name="senha" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px">Criar conta</button>
+    </form>
+    <div class="auth-footer">
+      Já tem conta? <a href="/login">Entrar</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

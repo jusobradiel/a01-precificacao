@@ -1,0 +1,5 @@
+flask==3.0.0
+flask-session==0.6.0
+bcrypt==4.1.2
+openpyxl
+gunicorn
