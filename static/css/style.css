@@ -199,6 +199,29 @@ tr:hover td{background:var(--accent2)}
 .badge-trial{background:var(--warn-bg);color:var(--warn)}
 .badge-inativo{background:var(--danger-bg);color:var(--danger)}
 
+/* ── Password eye toggle ── */
+.input-olho{position:relative;display:flex;align-items:center}
+.input-olho input{flex:1;padding-right:44px}
+.btn-olho{position:absolute;right:10px;background:none;border:none;cursor:pointer;color:var(--muted);padding:4px;display:flex;align-items:center;opacity:.5}
+.btn-olho:hover{opacity:1;color:var(--text)}
+
+/* ── Botões de ação (ícone + texto) ── */
+.btn-icon{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:inherit;text-decoration:none;transition:opacity .15s}
+.btn-icon:hover{opacity:.85}
+.btn-icon-editar{background:var(--accent2);color:var(--accent)}
+.btn-icon-excluir{background:var(--danger-bg);color:var(--danger)}
+
+/* ── Hora chips (horizontal) ── */
+.hora-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.hora-chip-pill{cursor:pointer}
+.hora-chip-pill span{display:inline-block;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-size:13px;color:var(--text);transition:all .15s;user-select:none}
+.hora-chip-pill span.ativo,.hora-chip-pill:hover span{background:var(--primary);color:#fff;border-color:var(--primary)}
+[data-theme="dark"] .hora-chip-pill span.ativo{background:var(--accent);border-color:var(--accent)}
+
+/* ── Nav Feather icons ── */
+.sidebar nav a svg{flex-shrink:0;opacity:.85}
+.sidebar nav a.active svg,.sidebar nav a:hover svg{opacity:1}
+
 /* ── Expirado ── */
 .expirado-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
 .expirado-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:48px 36px;width:100%;max-width:420px;text-align:center;box-shadow:var(--shadow)}

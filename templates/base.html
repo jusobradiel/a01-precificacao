@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{ nome_clinica }} — Precificação</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
 </head>
 <body>
 
@@ -31,24 +32,24 @@
 
     <nav>
       <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint=='dashboard' %}active{% endif %}" onclick="fecharSidebar()">
-        <span class="nav-icone">⊞</span> Início
+        <i data-feather="home"></i> Início
       </a>
       <a href="{{ url_for('configuracoes') }}" class="{% if request.endpoint=='configuracoes' %}active{% endif %}" onclick="fecharSidebar()">
-        <span class="nav-icone">⚙</span> Configurações
+        <i data-feather="settings"></i> Configurações
       </a>
       <a href="{{ url_for('insumos') }}" class="{% if request.endpoint=='insumos' %}active{% endif %}" onclick="fecharSidebar()">
-        <span class="nav-icone">◈</span> Insumos
+        <i data-feather="package"></i> Insumos
       </a>
       <a href="{{ url_for('protocolos') }}" class="{% if request.endpoint=='protocolos' %}active{% endif %}" onclick="fecharSidebar()">
-        <span class="nav-icone">◻</span> Protocolos
+        <i data-feather="clipboard"></i> Protocolos
       </a>
       {% if session.get('is_super_admin') %}
       <a href="{{ url_for('painel_a01') }}" class="{% if request.endpoint=='painel_a01' %}active{% endif %}" onclick="fecharSidebar()">
-        <span class="nav-icone">◉</span> Painel A'01
+        <i data-feather="shield"></i> Painel A'01
       </a>
       {% endif %}
       <a href="{{ url_for('static', filename='guia-de-uso.html') }}" target="_blank" class="nav-guia">
-        <span class="nav-icone">?</span> Guia de Uso
+        <i data-feather="book-open"></i> Guia de Uso
       </a>
     </nav>
 
@@ -100,6 +101,7 @@ function fecharSidebar(){
   document.getElementById('sidebar').classList.remove('aberta');
   document.getElementById('overlay').classList.remove('aberto');
 }
+if(typeof feather !== 'undefined') feather.replace({width:17,height:17,'stroke-width':2});
 </script>
 </body>
 </html>

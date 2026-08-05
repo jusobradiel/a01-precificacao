@@ -2,46 +2,82 @@
 {% block conteudo %}
 <h1>Insumos</h1>
 
-<form method="POST" action="{{ url_for('insumo_salvar') }}" class="form-inline">
-  <input type="hidden" name="id" id="insumo_id">
-  <input type="text" name="nome" id="insumo_nome" placeholder="Nome do insumo" required>
-  <input type="text" name="unidade" id="insumo_unidade" placeholder="Unidade (ml, un, g)">
-  <input type="number" step="0.001" name="qtd_embalagem" id="insumo_qtd" placeholder="Qtd na embalagem">
-  <input type="number" step="0.01" name="custo_embalagem" id="insumo_custo" placeholder="Custo da embalagem (R$)">
-  <button type="submit" class="btn-primario">Salvar</button>
-  <button type="button" onclick="limparForm()">Limpar</button>
-</form>
+<div class="secao">
+  <form method="POST" action="{{ url_for('insumo_salvar') }}">
+    <input type="hidden" name="id" id="insumo_id">
+    <div class="grid-2">
+      <div class="campo">
+        <label>Nome do insumo</label>
+        <input type="text" name="nome" id="insumo_nome" placeholder="Ex: Luva descartável" required>
+      </div>
+      <div class="campo">
+        <label>Unidade</label>
+        <input type="text" name="unidade" id="insumo_unidade" placeholder="ml, un, g, cx">
+      </div>
+      <div class="campo">
+        <label>Qtd na embalagem</label>
+        <input type="number" step="0.001" name="qtd_embalagem" id="insumo_qtd" placeholder="Ex: 100">
+      </div>
+      <div class="campo">
+        <label>Custo da embalagem (R$)</label>
+        <input type="number" step="0.01" name="custo_embalagem" id="insumo_custo" placeholder="0,00">
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button type="submit" class="btn-primario">Salvar insumo</button>
+      <button type="button" class="btn-secundario" onclick="limparForm()">Limpar</button>
+    </div>
+  </form>
+</div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Insumo</th>
-      <th>Unidade</th>
-      <th>Qtd embalagem</th>
-      <th>Custo embalagem</th>
-      <th>Custo unitário</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for i in insumos %}
-    <tr>
-      <td>{{ i.nome }}</td>
-      <td>{{ i.unidade }}</td>
-      <td>{{ i.qtd_embalagem }}</td>
-      <td>R$ {{ "%.2f"|format(i.custo_embalagem) }}</td>
-      <td><strong>R$ {{ "%.4f"|format(i.custo_unitario) }}</strong></td>
-      <td>
-        <button onclick="editar({{ i.id }}, '{{ i.nome }}', '{{ i.unidade }}', {{ i.qtd_embalagem }}, {{ i.custo_embalagem }})">Editar</button>
-        <a href="{{ url_for('insumo_excluir', id=i.id) }}"
-           onclick="return confirm('Excluir {{ i.nome }}?')">Excluir</a>
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="6">Nenhum insumo cadastrado.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
+{% if insumos %}
+<div class="secao" style="padding:0;overflow:hidden">
+  <div class="tabela-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Insumo</th>
+          <th>Unidade</th>
+          <th>Qtd embalagem</th>
+          <th>Custo embalagem</th>
+          <th>Custo unitário</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in insumos %}
+        <tr>
+          <td><strong>{{ i.nome }}</strong></td>
+          <td>{{ i.unidade }}</td>
+          <td>{{ i.qtd_embalagem }}</td>
+          <td>R$ {{ "%.2f"|format(i.custo_embalagem) }}</td>
+          <td><strong>R$ {{ "%.4f"|format(i.custo_unitario) }}</strong></td>
+          <td>
+            <div style="display:flex;gap:6px;justify-content:flex-end">
+              <button class="btn-icon btn-icon-editar"
+                onclick="editar({{ i.id }}, '{{ i.nome }}', '{{ i.unidade }}', {{ i.qtd_embalagem }}, {{ i.custo_embalagem }})">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                Editar
+              </button>
+              <a href="{{ url_for('insumo_excluir', id=i.id) }}"
+                 onclick="return confirm('Excluir {{ i.nome }}?')"
+                 class="btn-icon btn-icon-excluir">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                Excluir
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="secao" style="text-align:center;color:var(--muted);padding:40px">
+  Nenhum insumo cadastrado ainda.
+</div>
+{% endif %}
 
 <script>
 function editar(id, nome, unidade, qtd, custo) {
@@ -50,14 +86,11 @@ function editar(id, nome, unidade, qtd, custo) {
   document.getElementById('insumo_unidade').value = unidade;
   document.getElementById('insumo_qtd').value = qtd;
   document.getElementById('insumo_custo').value = custo;
-  window.scrollTo(0, 0);
+  window.scrollTo({top:0, behavior:'smooth'});
 }
 function limparForm() {
-  document.getElementById('insumo_id').value = '';
-  document.getElementById('insumo_nome').value = '';
-  document.getElementById('insumo_unidade').value = '';
-  document.getElementById('insumo_qtd').value = '';
-  document.getElementById('insumo_custo').value = '';
+  ['insumo_id','insumo_nome','insumo_unidade','insumo_qtd','insumo_custo']
+    .forEach(id => document.getElementById(id).value = '');
 }
 </script>
 {% endblock %}

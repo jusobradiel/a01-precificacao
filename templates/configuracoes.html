@@ -4,27 +4,6 @@
 
 <form method="POST" enctype="multipart/form-data">
 
-  <!-- Logo -->
-  <div class="secao">
-    <h3>Logo da Clínica</h3>
-    {% if tenant.logo_base64 %}
-    <div class="logo-atual">
-      <img src="{{ tenant.logo_base64 }}" alt="Logo atual" class="logo-preview">
-      <div>
-        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Logo atual</div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--danger)">
-          <input type="checkbox" name="remover_logo" value="1"> Remover logo
-        </label>
-      </div>
-    </div>
-    {% endif %}
-    <div class="campo">
-      <label>{{ 'Trocar logo' if tenant.logo_base64 else 'Adicionar logo' }} (PNG/JPG, máx. 1MB)</label>
-      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" onchange="previewLogo(this)">
-      <img id="logo-preview-novo" src="" alt="" style="display:none;max-height:56px;margin-top:8px;border-radius:6px;border:1px solid var(--border)">
-    </div>
-  </div>
-
   <!-- Dados gerais -->
   <div class="secao">
     <h3>Dados da Clínica</h3>
@@ -102,6 +81,27 @@
       {% endfor %}
     </div>
     <button type="button" class="btn-add" onclick="addCusto('variaveis')">+ Adicionar custo variável</button>
+  </div>
+
+  <!-- Logo -->
+  <div class="secao">
+    <h3>Logo da Clínica</h3>
+    {% if tenant.logo_base64 %}
+    <div class="logo-atual">
+      <img src="{{ tenant.logo_base64 }}" alt="Logo atual" class="logo-preview">
+      <div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Logo atual</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--danger)">
+          <input type="checkbox" name="remover_logo" value="1"> Remover logo
+        </label>
+      </div>
+    </div>
+    {% endif %}
+    <div class="campo">
+      <label>{{ 'Trocar logo' if tenant.logo_base64 else 'Adicionar logo' }} (PNG/JPG, máx. 1MB)</label>
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" onchange="previewLogo(this)">
+      <img id="logo-preview-novo" src="" alt="" style="display:none;max-height:56px;margin-top:8px;border-radius:6px;border:1px solid var(--border)">
+    </div>
   </div>
 
   <button type="submit" class="btn-primario">Salvar configurações</button>
