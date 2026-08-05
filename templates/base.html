@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -55,15 +55,11 @@
 
     <div class="sidebar-rodape">
       <a href="{{ url_for('logout') }}" class="btn-sair">Sair</a>
-      <button class="btn-tema" onclick="alternarTema()">
-        <span id="icone-tema">🌙</span> <span id="label-tema">Modo escuro</span>
-      </button>
       <img src="{{ url_for('static', filename='images/logo-branca.png') }}" alt="A'01 MUD" class="marca-logo-a01">
     </div>
   </aside>
 
   <div class="pagina">
-
     <main class="conteudo">
       {% with msgs = get_flashed_messages(with_categories=true) %}
         {% for cat, msg in msgs %}
@@ -72,27 +68,12 @@
       {% endwith %}
       {% block conteudo %}{% endblock %}
     </main>
-
     <footer class="rodape">Desenvolvido e criado por <strong>A'01 Negócios</strong></footer>
   </div>
 </div>
 
 <script>
-(function(){
-  const t = localStorage.getItem('tema') || 'light';
-  aplicarTema(t);
-})();
-function aplicarTema(t){
-  document.documentElement.setAttribute('data-theme', t);
-  const i = document.getElementById('icone-tema');
-  const l = document.getElementById('label-tema');
-  if(i) i.textContent = t==='dark' ? '☀' : '🌙';
-  if(l) l.textContent = t==='dark' ? 'Modo claro' : 'Modo escuro';
-  localStorage.setItem('tema', t);
-}
-function alternarTema(){
-  aplicarTema(document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
-}
+document.documentElement.setAttribute('data-theme', 'dark');
 function abrirSidebar(){
   document.getElementById('sidebar').classList.add('aberta');
   document.getElementById('overlay').classList.add('aberto');

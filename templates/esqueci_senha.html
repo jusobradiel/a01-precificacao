@@ -1,33 +1,39 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="light">
+<html lang="pt-BR" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Recuperar senha — Precificação Clínica</title>
+<title>Recuperar Senha — Precificação de Serviços</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 <div class="auth-page">
   <div class="auth-card">
-    <img src="{{ url_for('static', filename='images/logo-preta.png') }}" alt="A'01 MUD" class="auth-logo-img">
+    <img src="{{ url_for('static', filename='images/logo-branca.png') }}" alt="A'01 MUD" class="auth-logo-img">
     <div class="auth-sub">Recuperação de senha</div>
 
-    <p style="text-align:center;color:var(--muted);font-size:14px;margin:16px 0 24px">
-      Para recuperar seu acesso, entre em contato com a equipe A'01 Negócios pelo WhatsApp.
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in msgs %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <p style="font-size:14px;color:var(--muted);margin-bottom:20px;text-align:center">
+      Informe seu e-mail e enviaremos um link para redefinir sua senha.
     </p>
 
-    <a href="https://wa.me/5511999999999?text=Preciso+recuperar+minha+senha+do+sistema+de+precificação"
-       class="btn-primario full" target="_blank" style="text-decoration:none;text-align:center;display:block">
-      Chamar no WhatsApp
-    </a>
+    <form method="POST">
+      <div class="campo">
+        <label>E-mail cadastrado</label>
+        <input type="email" name="email" placeholder="seu@email.com" required autofocus>
+      </div>
+      <button type="submit" class="btn-primario full">Enviar link de recuperação</button>
+    </form>
 
     <div class="auth-link" style="margin-top:16px">
       <a href="{{ url_for('login') }}">← Voltar ao login</a>
     </div>
   </div>
 </div>
-<script>
-  document.documentElement.setAttribute('data-theme', localStorage.getItem('tema') || 'light');
-</script>
 </body>
 </html>

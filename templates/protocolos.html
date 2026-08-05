@@ -8,14 +8,36 @@
   </button>
 </div>
 
+<!-- Cards de visão geral -->
+{% if melhor_margem or mais_lucrativo %}
+<div class="insights-grid" style="margin-bottom:24px">
+  {% if melhor_margem %}
+  <div class="insight-card insight-margem">
+    <div class="insight-label">Maior margem</div>
+    <div class="insight-nome">{{ melhor_margem.nome }}</div>
+    <div class="insight-valor">{{ "%.1f"|format(melhor_margem.margem) }}%</div>
+    <div class="insight-sub">vendendo a {{ melhor_margem.preco | brl }}</div>
+  </div>
+  {% endif %}
+  {% if mais_lucrativo %}
+  <div class="insight-card insight-lucro">
+    <div class="insight-label">Mais lucrativo</div>
+    <div class="insight-nome">{{ mais_lucrativo.nome }}</div>
+    <div class="insight-valor">{{ mais_lucrativo.lucro | brl }}</div>
+    <div class="insight-sub">de lucro por procedimento</div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
 <div class="secao form-protocolo" id="form-novo" style="display:none">
-  <h3 style="margin-bottom:16px">Novo Protocolo</h3>
+  <h3 style="margin-bottom:16px" id="form-titulo">Novo Protocolo</h3>
   <form method="POST" action="{{ url_for('protocolo_salvar') }}">
     <input type="hidden" name="id" id="prot_id">
 
     <div class="campo">
       <label>Nome do protocolo</label>
-      <input type="text" name="nome" id="prot_nome" required placeholder="Ex: Limpeza de Pele Completa" autofocus>
+      <input type="text" name="nome" id="prot_nome" required placeholder="Ex: Limpeza de Pele Completa">
     </div>
 
     <div class="campo">
@@ -28,14 +50,14 @@
           (2.5, "2h 30min"), (3.0, "3h"), (4.0, "4h")
         ] %}
         <label class="hora-chip-pill">
-          <input type="radio" name="horas_clinica" value="{{ val }}" {% if val == 0 %}checked{% endif %} style="display:none">
+          <input type="radio" name="horas_clinica" value="{{ val }}" {% if val == 0 %}checked{% endif %} style="display:none" id="chip_{{ loop.index }}">
           <span>{{ label }}</span>
         </label>
         {% endfor %}
       </div>
       {% if hora_com_lucro %}
       <div class="hora-custo-preview">
-        Hora clínica: <strong>R$ {{ "%.2f"|format(hora_com_lucro) }}/h</strong>
+        Hora de atendimento: <strong>{{ hora_com_lucro | brl }}/h</strong>
       </div>
       {% else %}
       <div class="hora-custo-preview aviso">
@@ -70,7 +92,7 @@
 
     <div style="display:flex;gap:10px">
       <button type="submit" class="btn-primario">Salvar protocolo</button>
-      <button type="button" class="btn-secundario" onclick="toggleFormNovo()">Cancelar</button>
+      <button type="button" class="btn-secundario" onclick="cancelarForm()">Cancelar</button>
     </div>
   </form>
 </div>
@@ -83,6 +105,11 @@
   <div class="prot-header">
     <strong style="font-size:16px">{{ p.nome }}</strong>
     <div style="display:flex;gap:8px">
+      <button class="btn-icon btn-icon-editar"
+        onclick="editarProtocolo({{ p.id }}, '{{ p.nome|replace("'","\\'")|e }}', {{ p.horas_clinica or 0 }}, {{ p.preco1 or 0 }}, {{ p.preco2 or 0 }}, {{ p.preco3 or 0 }})">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Editar
+      </button>
       <a href="{{ url_for('protocolo_excluir', id=p.id) }}"
          onclick="return confirm('Excluir {{ p.nome }}?')"
          class="btn-icon btn-icon-excluir">
@@ -101,20 +128,20 @@
       {% for item in pd.itens %}
       <tr>
         <td>{{ item.nome }}</td>
-        <td>{{ item.quantidade }}</td>
-        <td>R$ {{ "%.2f"|format(item.custo) }}</td>
+        <td>{{ item.quantidade | qtd }}</td>
+        <td>{{ item.custo | brl }}</td>
       </tr>
       {% endfor %}
       {% if p.horas_clinica and p.horas_clinica > 0 %}
       <tr class="linha-hora">
-        <td><span class="tag-hora">⏱ Hora clínica</span> {{ formatar_horas(p.horas_clinica) }}</td>
+        <td><span class="tag-hora">⏱ Hora de atendimento</span> {{ formatar_horas(p.horas_clinica) }}</td>
         <td>—</td>
-        <td>R$ {{ "%.2f"|format(pd.custo_hora) }}</td>
+        <td>{{ pd.custo_hora | brl }}</td>
       </tr>
       {% endif %}
       <tr class="total-row">
         <td colspan="2"><strong>Custo total</strong></td>
-        <td><strong>R$ {{ "%.2f"|format(pd.custo_total) }}</strong></td>
+        <td><strong>{{ pd.custo_total | brl }}</strong></td>
       </tr>
     </tbody>
   </table>
@@ -128,8 +155,8 @@
     {% set margem = (lucro / preco * 100) if preco > 0 else 0 %}
     <div class="cenario {% if lucro < 0 %}cenario-negativo{% endif %}">
       <div class="cenario-label">{{ label }}</div>
-      <div class="cenario-preco">R$ {{ "%.2f"|format(preco) }}</div>
-      <div>Lucro: R$ {{ "%.2f"|format(lucro) }}</div>
+      <div class="cenario-preco">{{ preco | brl }}</div>
+      <div>Lucro: {{ lucro | brl }}</div>
       <div>Margem: {{ "%.1f"|format(margem) }}%</div>
     </div>
     {% endif %}
@@ -155,7 +182,54 @@ const horaValor = {{ hora_com_lucro }};
 
 function toggleFormNovo() {
   const f = document.getElementById('form-novo');
-  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+  const visivel = f.style.display !== 'none';
+  if (visivel) {
+    cancelarForm();
+  } else {
+    document.getElementById('form-titulo').textContent = 'Novo Protocolo';
+    document.getElementById('prot_id').value = '';
+    document.getElementById('prot_nome').value = '';
+    document.getElementById('prot_p1').value = '';
+    document.getElementById('prot_p2').value = '';
+    document.getElementById('prot_p3').value = '';
+    document.getElementById('itens-form').innerHTML = '';
+    resetarChips(0);
+    f.style.display = 'block';
+    f.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+
+function cancelarForm() {
+  document.getElementById('form-novo').style.display = 'none';
+}
+
+function editarProtocolo(id, nome, horas, p1, p2, p3) {
+  document.getElementById('form-titulo').textContent = 'Editar Protocolo';
+  document.getElementById('prot_id').value = id;
+  document.getElementById('prot_nome').value = nome;
+  document.getElementById('prot_p1').value = p1 || '';
+  document.getElementById('prot_p2').value = p2 || '';
+  document.getElementById('prot_p3').value = p3 || '';
+  document.getElementById('itens-form').innerHTML = '';
+  resetarChips(horas);
+  const f = document.getElementById('form-novo');
+  f.style.display = 'block';
+  f.scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function resetarChips(horasSelecionadas) {
+  document.querySelectorAll('.hora-chip-pill').forEach(label => {
+    const input = label.querySelector('input');
+    const span  = label.querySelector('span');
+    const val   = parseFloat(input.value);
+    if (val === horasSelecionadas) {
+      input.checked = true;
+      span.classList.add('ativo');
+    } else {
+      input.checked = false;
+      span.classList.remove('ativo');
+    }
+  });
 }
 
 document.querySelectorAll('.hora-chip-pill').forEach(label => {
@@ -164,8 +238,7 @@ document.querySelectorAll('.hora-chip-pill').forEach(label => {
     label.querySelector('span').classList.add('ativo');
   });
 });
-document.querySelector('.hora-chip-pill input:checked')?.closest('.hora-chip-pill')
-  ?.querySelector('span')?.classList.add('ativo');
+resetarChips(0);
 
 function adicionarItem() {
   let opts = '<option value="">Selecione o insumo</option>';

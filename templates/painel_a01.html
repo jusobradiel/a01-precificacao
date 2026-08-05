@@ -18,6 +18,7 @@
           <th>E-mail</th>
           <th>Status</th>
           <th>Cadastro</th>
+          <th>Último acesso</th>
           <th>Ações</th>
         </tr>
       </thead>
@@ -36,6 +37,13 @@
             {% endif %}
           </td>
           <td style="font-size:13px;color:var(--muted)">{{ t.data_cadastro.strftime('%d/%m/%Y') }}</td>
+          <td style="font-size:13px;color:var(--muted)">
+            {% if d.ultimo_acesso %}
+              {{ d.ultimo_acesso.strftime('%d/%m/%Y %H:%M') }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
           <td>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               {% if t.status != 'ativo' %}
