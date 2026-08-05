@@ -575,6 +575,8 @@ def protocolo_salvar():
     quantidades = request.form.getlist("quantidade")
     itens = []
     for iid, qtd in zip(insumo_ids, quantidades):
+        if not iid:
+            continue
         ins = db.session.get(Insumo, int(iid))
         if ins and ins.tenant_id == tid:
             q = float(qtd or 0)
