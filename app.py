@@ -494,8 +494,9 @@ def init_db():
             db.session.add(sa)
             db.session.commit()
 
+init_db()
+
 if __name__ == "__main__":
-    init_db()
     port  = int(os.environ.get("PORT", 5000))
     local = not os.environ.get("DATABASE_URL")
     if local:
