@@ -609,6 +609,17 @@ def protocolo_excluir(id):
 def init_db():
     with app.app_context():
         db.create_all()
+        # Migração: adiciona coluna ultimo_acesso se não existir
+        try:
+            if db_url.startswith("postgresql"):
+                db.session.execute(db.text(
+                    "ALTER TABLE usuario ADD COLUMN IF NOT EXISTS ultimo_acesso TIMESTAMP"))
+            else:
+                db.session.execute(db.text(
+                    "ALTER TABLE usuario ADD COLUMN ultimo_acesso TIMESTAMP"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
         if not Usuario.query.filter_by(is_super_admin=True).first():
             sa = Usuario(
                 email=os.environ.get("SUPER_ADMIN_EMAIL", "admin@a01.com.br"),
