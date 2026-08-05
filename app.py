@@ -1,10 +1,11 @@
-import os, json, base64, threading, webbrowser, secrets
+import os, json, base64, threading, webbrowser, secrets, smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from functools import wraps
 
 from flask import Flask, render_template, request, redirect, url_for, session, flash
 from flask_sqlalchemy import SQLAlchemy
-from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
@@ -18,15 +19,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
-app.config["MAIL_SERVER"]         = "smtp.gmail.com"
-app.config["MAIL_PORT"]           = 587
-app.config["MAIL_USE_TLS"]        = True
-app.config["MAIL_USERNAME"]       = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
-app.config["MAIL_PASSWORD"]       = os.environ.get("MAIL_PASSWORD", "")
-app.config["MAIL_DEFAULT_SENDER"] = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
+MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
+MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
 
-db   = SQLAlchemy(app)
-mail = Mail(app)
+db = SQLAlchemy(app)
 
 DIAS_TRIAL = 7
 
@@ -303,28 +299,32 @@ def esqueci_senha():
             db.session.commit()
             link = url_for("resetar_senha", token=token, _external=True)
             try:
-                msg = Message(
-                    subject="Redefinição de senha — Precificação de Serviços",
-                    recipients=[email],
-                    html=f"""
-                    <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
-                      <p style="font-size:15px;color:#1A2E38">Olá!</p>
-                      <p style="font-size:14px;color:#5A7A8A;margin-bottom:24px">
-                        Recebemos uma solicitação para redefinir a senha da sua conta.
-                        Clique no botão abaixo — o link é válido por <strong>1 hora</strong>.
-                      </p>
-                      <a href="{link}"
-                         style="display:inline-block;background:#0F3A4A;color:white;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none">
-                        Redefinir minha senha
-                      </a>
-                      <p style="font-size:12px;color:#8A9AAA;margin-top:24px">
-                        Se você não solicitou isso, ignore este e-mail. Nenhuma alteração foi feita.
-                      </p>
-                      <hr style="border:none;border-top:1px solid #D0DDE3;margin:24px 0">
-                      <p style="font-size:12px;color:#8A9AAA">A'01 Negócios — Precificação de Serviços</p>
-                    </div>"""
-                )
-                mail.send(msg)
+                html_body = f"""
+                <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
+                  <p style="font-size:15px;color:#1A2E38">Olá!</p>
+                  <p style="font-size:14px;color:#5A7A8A;margin-bottom:24px">
+                    Recebemos uma solicitação para redefinir a senha da sua conta.
+                    Clique no botão abaixo — o link é válido por <strong>1 hora</strong>.
+                  </p>
+                  <a href="{link}"
+                     style="display:inline-block;background:#0F3A4A;color:white;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none">
+                    Redefinir minha senha
+                  </a>
+                  <p style="font-size:12px;color:#8A9AAA;margin-top:24px">
+                    Se você não solicitou isso, ignore este e-mail. Nenhuma alteração foi feita.
+                  </p>
+                  <hr style="border:none;border-top:1px solid #D0DDE3;margin:24px 0">
+                  <p style="font-size:12px;color:#8A9AAA">A'01 Negócios — Precificação de Serviços</p>
+                </div>"""
+                msg = MIMEMultipart("alternative")
+                msg["Subject"] = "Redefinição de senha — Precificação de Serviços"
+                msg["From"]    = MAIL_USERNAME
+                msg["To"]      = email
+                msg.attach(MIMEText(html_body, "html", "utf-8"))
+                with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                    server.starttls()
+                    server.login(MAIL_USERNAME, MAIL_PASSWORD)
+                    server.sendmail(MAIL_USERNAME, email, msg.as_string())
             except Exception:
                 pass
         flash("Se o e-mail estiver cadastrado, você receberá um link em instantes.", "success")
