@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Insumos</h1>
+
+<form method="POST" action="{{ url_for('insumo_salvar') }}" class="form-inline">
+  <input type="hidden" name="id" id="insumo_id">
+  <input type="text" name="nome" id="insumo_nome" placeholder="Nome do insumo" required>
+  <input type="text" name="unidade" id="insumo_unidade" placeholder="Unidade (ml, un, g)">
+  <input type="number" step="0.001" name="qtd_embalagem" id="insumo_qtd" placeholder="Qtd na embalagem">
+  <input type="number" step="0.01" name="custo_embalagem" id="insumo_custo" placeholder="Custo da embalagem (R$)">
+  <button type="submit" class="btn-primario">Salvar</button>
+  <button type="button" onclick="limparForm()">Limpar</button>
+</form>
+
+<table>
+  <thead>
+    <tr>
+      <th>Insumo</th>
+      <th>Unidade</th>
+      <th>Qtd embalagem</th>
+      <th>Custo embalagem</th>
+      <th>Custo unitário</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for i in insumos %}
+    <tr>
+      <td>{{ i.nome }}</td>
+      <td>{{ i.unidade }}</td>
+      <td>{{ i.qtd_embalagem }}</td>
+      <td>R$ {{ "%.2f"|format(i.custo_embalagem) }}</td>
+      <td><strong>R$ {{ "%.4f"|format(i.custo_unitario) }}</strong></td>
+      <td>
+        <button onclick="editar({{ i.id }}, '{{ i.nome }}', '{{ i.unidade }}', {{ i.qtd_embalagem }}, {{ i.custo_embalagem }})">Editar</button>
+        <a href="{{ url_for('insumo_excluir', id=i.id) }}"
+           onclick="return confirm('Excluir {{ i.nome }}?')">Excluir</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6">Nenhum insumo cadastrado.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<script>
+function editar(id, nome, unidade, qtd, custo) {
+  document.getElementById('insumo_id').value = id;
+  document.getElementById('insumo_nome').value = nome;
+  document.getElementById('insumo_unidade').value = unidade;
+  document.getElementById('insumo_qtd').value = qtd;
+  document.getElementById('insumo_custo').value = custo;
+  window.scrollTo(0, 0);
+}
+function limparForm() {
+  document.getElementById('insumo_id').value = '';
+  document.getElementById('insumo_nome').value = '';
+  document.getElementById('insumo_unidade').value = '';
+  document.getElementById('insumo_qtd').value = '';
+  document.getElementById('insumo_custo').value = '';
+}
+</script>
+{% endblock %}

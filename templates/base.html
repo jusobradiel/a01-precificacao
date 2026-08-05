@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ nome_clinica }} — Precificação</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<!-- Topbar mobile -->
+<div class="topbar">
+  <button class="btn-menu" id="btnMenu" onclick="abrirSidebar()">
+    <span></span><span></span><span></span>
+  </button>
+  <span class="topbar-nome">{{ nome_clinica }}</span>
+</div>
+
+<!-- Overlay mobile -->
+<div class="sidebar-overlay" id="overlay" onclick="fecharSidebar()"></div>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-topo">
+      {% if logo_base64 %}
+        <img src="{{ logo_base64 }}" alt="Logo" class="sidebar-logo">
+      {% endif %}
+      <div class="clinica-nome">{{ nome_clinica }}</div>
+      <div class="clinica-sub">Precificação Clínica</div>
+    </div>
+
+    <nav>
+      <a href="{{ url_for('dashboard') }}" class="{% if request.endpoint=='dashboard' %}active{% endif %}" onclick="fecharSidebar()">
+        <span class="nav-icone">⊞</span> Início
+      </a>
+      <a href="{{ url_for('configuracoes') }}" class="{% if request.endpoint=='configuracoes' %}active{% endif %}" onclick="fecharSidebar()">
+        <span class="nav-icone">⚙</span> Configurações
+      </a>
+      <a href="{{ url_for('insumos') }}" class="{% if request.endpoint=='insumos' %}active{% endif %}" onclick="fecharSidebar()">
+        <span class="nav-icone">◈</span> Insumos
+      </a>
+      <a href="{{ url_for('protocolos') }}" class="{% if request.endpoint=='protocolos' %}active{% endif %}" onclick="fecharSidebar()">
+        <span class="nav-icone">◻</span> Protocolos
+      </a>
+      {% if session.get('is_super_admin') %}
+      <a href="{{ url_for('painel_a01') }}" class="{% if request.endpoint=='painel_a01' %}active{% endif %}" onclick="fecharSidebar()">
+        <span class="nav-icone">◉</span> Painel A'01
+      </a>
+      {% endif %}
+      <a href="{{ url_for('static', filename='guia-de-uso.html') }}" target="_blank" class="nav-guia">
+        <span class="nav-icone">?</span> Guia de Uso
+      </a>
+    </nav>
+
+    <div class="sidebar-rodape">
+      <a href="{{ url_for('logout') }}" class="btn-sair">Sair</a>
+      <button class="btn-tema" onclick="alternarTema()">
+        <span id="icone-tema">🌙</span> <span id="label-tema">Modo escuro</span>
+      </button>
+      <div class="marca-a01">Desenvolvido por A'01 Negócios</div>
+    </div>
+  </aside>
+
+  <div class="pagina">
+    {% if dias_restantes is not none %}
+    <div class="banner-trial">
+      ⏳ <strong>Teste gratuito:</strong> {{ dias_restantes }} dia{{ 's' if dias_restantes != 1 else '' }} restante{{ 's' if dias_restantes != 1 else '' }}.
+      <a href="https://wa.me/5500000000000" target="_blank">Ativar conta →</a>
+    </div>
+    {% endif %}
+
+    <main class="conteudo">
+      {% with msgs = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in msgs %}
+          <div class="alert alert-{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endwith %}
+      {% block conteudo %}{% endblock %}
+    </main>
+
+    <footer class="rodape">Desenvolvido e criado por <strong>A'01 Negócios</strong></footer>
+  </div>
+</div>
+
+<script>
+(function(){
+  const t = localStorage.getItem('tema') || 'light';
+  aplicarTema(t);
+})();
+function aplicarTema(t){
+  document.documentElement.setAttribute('data-theme', t);
+  const i = document.getElementById('icone-tema');
+  const l = document.getElementById('label-tema');
+  if(i) i.textContent = t==='dark' ? '☀' : '🌙';
+  if(l) l.textContent = t==='dark' ? 'Modo claro' : 'Modo escuro';
+  localStorage.setItem('tema', t);
+}
+function alternarTema(){
+  aplicarTema(document.documentElement.getAttribute('data-theme')==='dark' ? 'light' : 'dark');
+}
+function abrirSidebar(){
+  document.getElementById('sidebar').classList.add('aberta');
+  document.getElementById('overlay').classList.add('aberto');
+}
+function fecharSidebar(){
+  document.getElementById('sidebar').classList.remove('aberta');
+  document.getElementById('overlay').classList.remove('aberto');
+}
+</script>
+</body>
+</html>

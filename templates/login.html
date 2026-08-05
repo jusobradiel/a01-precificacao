@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login — Precificação Clínica</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="auth-page">
+  <div class="auth-card">
+    <div class="auth-logo">A'01</div>
+    <div class="auth-sub">Precificação Clínica</div>
+
+    {% with msgs = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in msgs %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    <form method="POST">
+      <div class="campo">
+        <label>E-mail</label>
+        <input type="email" name="email" placeholder="seu@email.com" autofocus required>
+      </div>
+      <div class="campo">
+        <label>Senha</label>
+        <input type="password" name="senha" placeholder="••••••••" required>
+      </div>
+      <button type="submit" class="btn-primario full">Entrar</button>
+    </form>
+
+    <div class="auth-link">
+      Ainda não tem conta? <a href="{{ url_for('registro') }}">Criar conta grátis — 7 dias de teste</a>
+    </div>
+  </div>
+</div>
+<script>
+  document.documentElement.setAttribute('data-theme', localStorage.getItem('tema') || 'light');
+</script>
+</body>
+</html>

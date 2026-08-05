@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guia de Uso — Sistema de Precificação</title>
+<style>
+:root {
+  --bg:       #f7fafb;
+  --surface:  #ffffff;
+  --primary:  #0F3A4A;
+  --accent:   #1a7a9e;
+  --accent2:  #e8f4f8;
+  --text:     #1e2d38;
+  --muted:    #5a7a8a;
+  --border:   #d4e2ea;
+  --success:  #1f8c5a;
+  --warn:     #a06000;
+  --warn-bg:  #fff8e6;
+  --step-dot: #0F3A4A;
+  --shadow:   0 2px 12px rgba(15,58,74,0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:       #0c1820;
+    --surface:  #132030;
+    --primary:  #5ecfed;
+    --accent:   #5ecfed;
+    --accent2:  #0e2535;
+    --text:     #c8dce6;
+    --muted:    #5a8898;
+    --border:   #1e3448;
+    --success:  #3ecf8e;
+    --warn:     #e0a020;
+    --warn-bg:  #1a2510;
+    --step-dot: #5ecfed;
+    --shadow:   0 2px 12px rgba(0,0,0,0.3);
+  }
+}
+
+[data-theme="dark"] {
+  --bg:       #0c1820;
+  --surface:  #132030;
+  --primary:  #5ecfed;
+  --accent:   #5ecfed;
+  --accent2:  #0e2535;
+  --text:     #c8dce6;
+  --muted:    #5a8898;
+  --border:   #1e3448;
+  --success:  #3ecf8e;
+  --warn:     #e0a020;
+  --warn-bg:  #1a2510;
+  --step-dot: #5ecfed;
+  --shadow:   0 2px 12px rgba(0,0,0,0.3);
+}
+
+[data-theme="light"] {
+  --bg:       #f7fafb;
+  --surface:  #ffffff;
+  --primary:  #0F3A4A;
+  --accent:   #1a7a9e;
+  --accent2:  #e8f4f8;
+  --text:     #1e2d38;
+  --muted:    #5a7a8a;
+  --border:   #d4e2ea;
+  --success:  #1f8c5a;
+  --warn:     #a06000;
+  --warn-bg:  #fff8e6;
+  --step-dot: #0F3A4A;
+  --shadow:   0 2px 12px rgba(15,58,74,0.08);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.65;
+}
+
+.pagina {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 24px 80px;
+}
+
+/* ── Capa ── */
+.capa {
+  background: var(--primary);
+  color: white;
+  border-radius: 16px;
+  padding: 48px 44px;
+  margin-bottom: 52px;
+  position: relative;
+  overflow: hidden;
+}
+
+.capa::before {
+  content: '';
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 220px; height: 220px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+}
+
+.capa::after {
+  content: '';
+  position: absolute;
+  right: 60px; bottom: -60px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+
+.marca {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 13px;
+  font-weight: normal;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.55);
+  margin-bottom: 20px;
+}
+
+.capa h1 {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 36px;
+  font-weight: normal;
+  line-height: 1.2;
+  text-wrap: balance;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.capa p {
+  font-size: 15px;
+  color: rgba(255,255,255,0.72);
+  max-width: 480px;
+  line-height: 1.6;
+  position: relative;
+}
+
+.badge-passos {
+  display: inline-block;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.75);
+  margin-bottom: 24px;
+}
+
+/* ── Índice ── */
+.indice {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-bottom: 48px;
+  box-shadow: var(--shadow);
+}
+
+.indice-titulo {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.indice ol {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 24px;
+}
+
+.indice li a {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.indice li a:hover { text-decoration: underline; }
+
+.indice li a::before {
+  content: attr(data-num);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px; height: 20px;
+  background: var(--accent2);
+  color: var(--accent);
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* ── Seções ── */
+.secao-titulo {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 22px;
+  font-weight: normal;
+  color: var(--primary);
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.secao-titulo .num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  background: var(--primary);
+  color: white;
+  border-radius: 50%;
+  font-family: system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.passo {
+  margin-bottom: 52px;
+  scroll-margin-top: 24px;
+}
+
+/* ── Card de conteúdo ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px 28px;
+  margin-top: 16px;
+  box-shadow: var(--shadow);
+}
+
+/* ── Mockup de tela ── */
+.mockup {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 20px;
+  box-shadow: var(--shadow);
+}
+
+.mockup-barra {
+  background: var(--primary);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mockup-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+}
+
+.mockup-url {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  margin-left: 6px;
+  font-family: monospace;
+}
+
+.mockup-corpo {
+  padding: 20px 22px;
+}
+
+/* Tela de ativação mockup */
+.mock-ativacao {
+  text-align: center;
+  padding: 28px 20px;
+}
+
+.mock-logo {
+  font-family: Georgia, serif;
+  font-size: 28px;
+  font-weight: bold;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.mock-subtitulo {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.mock-input {
+  width: 100%;
+  max-width: 300px;
+  padding: 10px 14px;
+  border: 2px solid var(--accent);
+  border-radius: 8px;
+  font-size: 18px;
+  text-align: center;
+  letter-spacing: 3px;
+  color: var(--text);
+  background: var(--surface);
+  margin-bottom: 12px;
+  font-family: monospace;
+}
+
+.mock-btn {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto;
+  padding: 10px;
+  background: var(--primary);
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Tela de login mockup */
+.mock-login {
+  text-align: center;
+  padding: 24px 20px;
+}
+
+.mock-campo {
+  width: 100%;
+  max-width: 300px;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 13px;
+  color: var(--muted);
+  background: var(--bg);
+  margin: 0 auto 8px;
+  text-align: left;
+  display: block;
+}
+
+/* Tela config mockup */
+.mock-config {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 0;
+}
+
+.mock-label {
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 3px;
+}
+
+.mock-field {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.mock-field.destaque {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Tela resultado mockup */
+.mock-resultado {
+  display: flex;
+  gap: 10px;
+  padding: 12px 0 4px;
+  flex-wrap: wrap;
+}
+
+.mock-cenario {
+  flex: 1;
+  min-width: 120px;
+  background: var(--accent2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.mock-cenario-nome { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.mock-cenario-preco { font-size: 18px; font-weight: 700; color: var(--primary); }
+.mock-cenario-info { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* ── Listas de instruções ── */
+.instrucoes {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.instrucoes li {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.instrucoes li .ico {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: var(--accent2);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-weight: 700;
+}
+
+.instrucoes li .txt strong {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.instrucoes li .txt span {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ── Alerta / dica ── */
+.alerta {
+  background: var(--warn-bg);
+  border-left: 3px solid var(--warn);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--warn);
+  margin-top: 16px;
+  line-height: 1.55;
+}
+
+.dica {
+  background: var(--accent2);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 8px 8px 0;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: var(--accent);
+  margin-top: 16px;
+  line-height: 1.55;
+}
+
+.dica strong, .alerta strong { font-weight: 700; }
+
+/* ── Tabela exemplo ── */
+.tabela-ex {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+  font-size: 13px;
+}
+
+.tabela-ex th {
+  background: var(--primary);
+  color: white;
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tabela-ex td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+}
+
+.tabela-ex tr:last-child td { border-bottom: none; }
+.tabela-ex tr:nth-child(even) td { background: var(--bg); }
+.tabela-ex td.calc { font-weight: 700; color: var(--success); }
+
+/* ── Hora clínica ilustração ── */
+.formula-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-top: 16px;
+  font-size: 14px;
+}
+
+.formula {
+  font-family: Georgia, serif;
+  font-size: 16px;
+  color: var(--primary);
+  text-align: center;
+  padding: 14px;
+  background: var(--accent2);
+  border-radius: 8px;
+  margin: 12px 0;
+  line-height: 1.8;
+}
+
+.formula span { color: var(--muted); font-size: 13px; }
+
+/* ── Chips de tempo ── */
+.chips-tempo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.chip-tempo {
+  background: var(--accent2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 13px;
+  color: var(--accent);
+}
+
+.chip-tempo.ativo {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+/* ── Suporte ── */
+.suporte {
+  background: var(--primary);
+  color: white;
+  border-radius: 14px;
+  padding: 32px 36px;
+  margin-top: 52px;
+  text-align: center;
+}
+
+.suporte h3 {
+  font-family: Georgia, serif;
+  font-size: 22px;
+  font-weight: normal;
+  margin-bottom: 8px;
+}
+
+.suporte p {
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.suporte-info {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+
+.suporte-item { color: rgba(255,255,255,0.85); }
+.suporte-item strong { display: block; color: white; font-size: 15px; }
+
+/* ── Rodapé ── */
+.rodape {
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Toggle tema ── */
+.tema-btn {
+  position: fixed;
+  top: 20px; right: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  z-index: 100;
+}
+
+.tema-btn:hover { color: var(--accent); }
+
+@media (max-width: 600px) {
+  .capa { padding: 32px 24px; }
+  .capa h1 { font-size: 26px; }
+  .indice ol { grid-template-columns: 1fr; }
+  .mock-config { grid-template-columns: 1fr; }
+  .suporte-info { flex-direction: column; gap: 16px; }
+}
+
+@media print {
+  .tema-btn { display: none; }
+  body { background: white; }
+  .passo { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<button class="tema-btn" onclick="alternarTema()" id="temaBtn">🌙 Modo escuro</button>
+
+<div class="pagina">
+
+  <!-- Capa -->
+  <div class="capa">
+    <div class="marca">A'01 Negócios</div>
+    <div class="badge-passos">7 passos para começar</div>
+    <h1>Guia de Uso<br>Sistema de Precificação</h1>
+    <p>Tudo que você precisa saber para cadastrar seus custos, insumos e protocolos — e descobrir o preço justo para cada procedimento.</p>
+  </div>
+
+  <!-- Índice -->
+  <div class="indice">
+    <div class="indice-titulo">Neste guia</div>
+    <ol>
+      <li><a href="#passo1" data-num="1">Abrindo o sistema</a></li>
+      <li><a href="#passo2" data-num="2">Ativação (primeira vez)</a></li>
+      <li><a href="#passo3" data-num="3">Fazendo o login</a></li>
+      <li><a href="#passo4" data-num="4">Configurando sua clínica</a></li>
+      <li><a href="#passo5" data-num="5">Cadastrando insumos</a></li>
+      <li><a href="#passo6" data-num="6">Criando protocolos</a></li>
+      <li><a href="#passo7" data-num="7">Lendo os resultados</a></li>
+    </ol>
+  </div>
+
+  <!-- Passo 1 -->
+  <div class="passo" id="passo1">
+    <div class="secao-titulo">
+      <span class="num">1</span>
+      Abrindo o sistema
+    </div>
+    <div class="card">
+      <ul class="instrucoes">
+        <li>
+          <div class="ico">1</div>
+          <div class="txt">
+            <strong>Clique duas vezes no ícone do programa</strong>
+            <span>O ícone fica na sua Área de Trabalho. Ele se chama <em>Precificação A'01</em>.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">2</div>
+          <div class="txt">
+            <strong>Aguarde alguns segundos</strong>
+            <span>Uma janela preta pode aparecer brevemente — é normal. Ela é o motor do sistema e não precisa ser fechada.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">3</div>
+          <div class="txt">
+            <strong>O navegador abre automaticamente</strong>
+            <span>O sistema abre direto no seu navegador padrão (Chrome, Edge, etc.), no endereço <code style="background:var(--accent2);padding:1px 6px;border-radius:4px;font-size:12px;color:var(--accent)">localhost:5000</code>. Não é necessário acessar a internet.</span>
+          </div>
+        </li>
+      </ul>
+      <div class="alerta">
+        <strong>Importante:</strong> não feche a janela preta que aparece em segundo plano. Se ela for fechada, o sistema para de funcionar. Para encerrar o programa, use o botão "Sair" dentro do sistema.
+      </div>
+    </div>
+  </div>
+
+  <!-- Passo 2 -->
+  <div class="passo" id="passo2">
+    <div class="secao-titulo">
+      <span class="num">2</span>
+      Ativação <small style="font-size:14px;color:var(--muted);font-family:system-ui">(somente na primeira vez)</small>
+    </div>
+    <div class="card">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">
+        Na primeira vez que abrir o sistema, uma tela de ativação vai aparecer. Isso garante que o software está instalado em um computador autorizado.
+      </p>
+
+      <div class="mockup">
+        <div class="mockup-barra">
+          <div class="mockup-dot"></div>
+          <div class="mockup-dot"></div>
+          <div class="mockup-dot"></div>
+          <span class="mockup-url">localhost:5000/ativacao</span>
+        </div>
+        <div class="mockup-corpo">
+          <div class="mock-ativacao">
+            <div class="mock-logo">A'01</div>
+            <div class="mock-subtitulo">Ativação do Sistema</div>
+            <div class="mock-input" style="color:var(--muted);letter-spacing:1px;font-size:14px">Código de ativação</div>
+            <div class="mock-btn">Ativar</div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="instrucoes" style="margin-top:20px">
+        <li>
+          <div class="ico">1</div>
+          <div class="txt">
+            <strong>Entre em contato com o suporte A'01</strong>
+            <span>Envie uma mensagem via WhatsApp avisando que vai ativar o sistema agora.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">2</div>
+          <div class="txt">
+            <strong>Receba o código de ativação</strong>
+            <span>Você receberá um número (ex: <code style="background:var(--accent2);padding:1px 6px;border-radius:4px;font-size:12px;color:var(--accent)">142180000</code>). Este código é gerado especialmente para você e tem validade de 8 horas.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">3</div>
+          <div class="txt">
+            <strong>Digite o código e clique em "Ativar"</strong>
+            <span>Após a ativação, o sistema nunca mais pedirá este código neste computador.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="dica">
+        <strong>Esta etapa acontece apenas uma vez.</strong> Se você formatar ou trocar de computador, basta entrar em contato para receber um novo código.
+      </div>
+    </div>
+  </div>
+
+  <!-- Passo 3 -->
+  <div class="passo" id="passo3">
+    <div class="secao-titulo">
+      <span class="num">3</span>
+      Fazendo o login
+    </div>
+    <div class="card">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:4px">
+        Após a ativação, você verá a tela de login sempre que abrir o sistema.
+      </p>
+
+      <div class="mockup">
+        <div class="mockup-barra">
+          <div class="mockup-dot"></div>
+          <div class="mockup-dot"></div>
+          <div class="mockup-dot"></div>
+          <span class="mockup-url">localhost:5000</span>
+        </div>
+        <div class="mockup-corpo">
+          <div class="mock-login">
+            <div class="mock-logo" style="font-size:22px;margin-bottom:4px">A'01</div>
+            <div class="mock-subtitulo">Precificação Clínica</div>
+            <div class="mock-campo">✉ seu@email.com</div>
+            <div class="mock-campo">● ● ● ● ● ● ●</div>
+            <div class="mock-btn" style="max-width:100%;margin-top:8px">Entrar</div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="instrucoes" style="margin-top:20px">
+        <li>
+          <div class="ico">✉</div>
+          <div class="txt">
+            <strong>Digite seu e-mail</strong>
+            <span>O e-mail foi definido pelo suporte A'01 no momento da configuração.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">●</div>
+          <div class="txt">
+            <strong>Digite sua senha</strong>
+            <span>A senha também foi fornecida pelo suporte. Recomendamos trocar para algo pessoal após o primeiro acesso.</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Passo 4 -->
+  <div class="passo" id="passo4">
+    <div class="secao-titulo">
+      <span class="num">4</span>
+      Configurando sua clínica
+    </div>
+    <div class="card">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">
+        Esta é a etapa mais importante. Aqui você informa seus custos mensais para que o sistema calcule automaticamente o valor da sua <strong style="color:var(--text)">hora clínica</strong>.
+      </p>
+
+      <div class="mockup">
+        <div class="mockup-barra">
+          <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
+          <span class="mockup-url">localhost:5000/configuracoes</span>
+        </div>
+        <div class="mockup-corpo">
+          <div class="mock-config">
+            <div>
+              <div class="mock-label">Nome da clínica</div>
+              <div class="mock-field">Dra. Jéssica Estética</div>
+            </div>
+            <div>
+              <div class="mock-label">Pró-labore mensal</div>
+              <div class="mock-field">R$ 5.000,00</div>
+            </div>
+            <div>
+              <div class="mock-label">Horas por mês</div>
+              <div class="mock-field">120h</div>
+            </div>
+            <div>
+              <div class="mock-label">Margem de lucro</div>
+              <div class="mock-field">30%</div>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+            <div class="mock-label" style="margin-bottom:6px">Hora clínica calculada</div>
+            <div class="mock-field destaque" style="font-size:18px">R$ 58,33 / hora</div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="instrucoes" style="margin-top:20px">
+        <li>
+          <div class="ico">1</div>
+          <div class="txt">
+            <strong>Preencha o nome da clínica</strong>
+            <span>Aparecerá no topo do sistema. Coloque seu nome profissional ou o nome da clínica.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">2</div>
+          <div class="txt">
+            <strong>Informe seu pró-labore</strong>
+            <span>É o salário que você retira do negócio por mês. Inclua este valor para que seu tempo seja remunerado.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">3</div>
+          <div class="txt">
+            <strong>Horas trabalhadas por mês</strong>
+            <span>Quantas horas você efetivamente atende clientes por mês. Exemplo: 5 horas por dia × 24 dias = 120h.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">4</div>
+          <div class="txt">
+            <strong>Adicione seus custos fixos e variáveis</strong>
+            <span>Use os botões de sugestão (Aluguel, Energia, Água…) para adicionar rapidamente. Coloque o valor mensal de cada um.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">5</div>
+          <div class="txt">
+            <strong>Clique em "Salvar configurações"</strong>
+            <span>O sistema calcula automaticamente o valor da sua hora clínica e já aplica nos protocolos.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="formula-box">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Como a hora clínica é calculada:</div>
+        <div class="formula">
+          (Pró-labore + Custos fixos + Custos variáveis) ÷ Horas por mês<br>
+          <span>= Custo da hora clínica</span><br>
+          × (1 + % de lucro) = <strong>Hora clínica final</strong>
+        </div>
+        <div style="font-size:12px;color:var(--muted)">
+          Exemplo: (R$ 5.000 + R$ 2.000) ÷ 120h = R$ 58,33/h de custo → com 30% de lucro = <strong style="color:var(--primary)">R$ 75,83/h</strong>
+        </div>
+      </div>
+
+      <div class="dica">
+        <strong>Dica:</strong> Revise seus custos a cada 3 meses. Qualquer aumento no aluguel ou nos produtos deve ser atualizado aqui para manter a precificação correta.
+      </div>
+    </div>
+  </div>
+
+  <!-- Passo 5 -->
+  <div class="passo" id="passo5">
+    <div class="secao-titulo">
+      <span class="num">5</span>
+      Cadastrando insumos
+    </div>
+    <div class="card">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">
+        Insumos são todos os materiais que você usa nos procedimentos: cremes, luvas, algodão, ácidos, seringas — tudo que tem custo. O sistema calcula o custo unitário automaticamente.
+      </p>
+
+      <p style="font-size:14px;margin-bottom:12px">Vá em <strong>Insumos</strong> no menu lateral e preencha o formulário no topo:</p>
+
+      <table class="tabela-ex">
+        <thead>
+          <tr>
+            <th>Insumo</th>
+            <th>Unidade</th>
+            <th>Qtd na embalagem</th>
+            <th>Custo da embalagem</th>
+            <th>Custo unitário</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Luva descartável</td>
+            <td>un</td>
+            <td>100</td>
+            <td>R$ 29,00</td>
+            <td class="calc">R$ 0,29</td>
+          </tr>
+          <tr>
+            <td>Ácido mandélico 30%</td>
+            <td>ml</td>
+            <td>30</td>
+            <td>R$ 85,00</td>
+            <td class="calc">R$ 2,83</td>
+          </tr>
+          <tr>
+            <td>Máscara facial</td>
+            <td>g</td>
+            <td>200</td>
+            <td>R$ 45,00</td>
+            <td class="calc">R$ 0,23</td>
+          </tr>
+          <tr>
+            <td>Agulha 30G</td>
+            <td>un</td>
+            <td>100</td>
+            <td>R$ 38,00</td>
+            <td class="calc">R$ 0,38</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <ul class="instrucoes" style="margin-top:20px">
+        <li>
+          <div class="ico">1</div>
+          <div class="txt">
+            <strong>Nome do insumo</strong>
+            <span>Coloque o nome como você reconhece na nota fiscal ou estoque.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">2</div>
+          <div class="txt">
+            <strong>Unidade de medida</strong>
+            <span>Use <em>un</em> para unidades, <em>ml</em> para mililitros, <em>g</em> para gramas. Esta unidade aparece nos protocolos.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">3</div>
+          <div class="txt">
+            <strong>Quantidade na embalagem e custo total</strong>
+            <span>Coloque o que está no rótulo: quantas unidades/ml/g tem a embalagem, e quanto custou. O custo unitário é calculado automaticamente.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">4</div>
+          <div class="txt">
+            <strong>Clique em "Salvar"</strong>
+            <span>O insumo aparece na lista abaixo e já fica disponível para ser usado nos protocolos.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="dica">
+        <strong>Dica:</strong> Cadastre todos os insumos antes de criar os protocolos. Quanto mais completo, mais preciso será o custo de cada procedimento.
+      </div>
+    </div>
+  </div>
+
+  <!-- Passo 6 -->
+  <div class="passo" id="passo6">
+    <div class="secao-titulo">
+      <span class="num">6</span>
+      Criando protocolos
+    </div>
+    <div class="card">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">
+        Um protocolo é um procedimento completo: limpeza de pele, peeling, aplicação de botox, etc. Aqui você monta a "receita" do procedimento — quais insumos usa, quanto tempo leva, e qual preço cobrar.
+      </p>
+
+      <p style="font-size:14px;margin-bottom:12px">Vá em <strong>Protocolos</strong> e clique em <strong>"+ Novo Protocolo"</strong>.</p>
+
+      <ul class="instrucoes">
+        <li>
+          <div class="ico">1</div>
+          <div class="txt">
+            <strong>Nome do protocolo</strong>
+            <span>Ex: "Limpeza de Pele Profunda", "Peeling de Mandélico 30%", "Microagulhamento Facial".</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">2</div>
+          <div class="txt">
+            <strong>Tempo de atendimento (hora clínica)</strong>
+            <span>Selecione quanto tempo você dedica ao procedimento. Este tempo é um custo — se o procedimento leva 1h, o valor da sua hora clínica entra no custo total.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div style="margin: 16px 0 8px;font-size:13px;color:var(--muted)">Opções de tempo disponíveis:</div>
+      <div class="chips-tempo">
+        <span class="chip-tempo">Não incluir</span>
+        <span class="chip-tempo">15 min</span>
+        <span class="chip-tempo">30 min</span>
+        <span class="chip-tempo">45 min</span>
+        <span class="chip-tempo ativo">1h</span>
+        <span class="chip-tempo">1h 30min</span>
+        <span class="chip-tempo">2h</span>
+        <span class="chip-tempo">2h 30min</span>
+        <span class="chip-tempo">3h</span>
+        <span class="chip-tempo">4h</span>
+      </div>
+
+      <ul class="instrucoes" style="margin-top:20px">
+        <li>
+          <div class="ico">3</div>
+          <div class="txt">
+            <strong>Adicione os insumos usados</strong>
+            <span>Clique em "+ Adicionar insumo", selecione da lista e informe a quantidade usada em cada procedimento. O custo aparece ao lado automaticamente.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">4</div>
+          <div class="txt">
+            <strong>Informe até 3 cenários de preço de venda</strong>
+            <span>Você pode testar diferentes valores de venda. O sistema mostra o lucro e a margem de cada um para você decidir qual faz mais sentido.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">5</div>
+          <div class="txt">
+            <strong>Clique em "Salvar protocolo"</strong>
+            <span>O protocolo fica salvo e você pode consultá-lo ou editá-lo a qualquer momento.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="alerta">
+        <strong>Atenção:</strong> Sempre inclua o tempo de atendimento. Profissionais que ignoram a hora clínica cobram pelo produto mas não cobram pelo próprio trabalho — e acabam trabalhando no prejuízo.
+      </div>
+    </div>
+  </div>
+
+  <!-- Passo 7 -->
+  <div class="passo" id="passo7">
+    <div class="secao-titulo">
+      <span class="num">7</span>
+      Lendo os resultados
+    </div>
+    <div class="card">
+      <p style="color:var(--muted);font-size:14px;margin-bottom:16px">
+        Após salvar um protocolo, o sistema mostra um resumo completo com o custo total e os cenários de venda:
+      </p>
+
+      <div class="mockup">
+        <div class="mockup-barra">
+          <div class="mockup-dot"></div><div class="mockup-dot"></div><div class="mockup-dot"></div>
+          <span class="mockup-url">localhost:5000/protocolos</span>
+        </div>
+        <div class="mockup-corpo">
+          <div style="font-weight:700;color:var(--primary);font-size:15px;margin-bottom:12px">Limpeza de Pele Profunda</div>
+          <table class="tabela-ex" style="font-size:12px">
+            <thead><tr><th>Item</th><th>Qtd</th><th>Custo</th></tr></thead>
+            <tbody>
+              <tr><td>Luva descartável</td><td>2 un</td><td>R$ 0,58</td></tr>
+              <tr><td>Creme esfoliante</td><td>5 g</td><td>R$ 1,15</td></tr>
+              <tr><td>Máscara calmante</td><td>10 g</td><td>R$ 2,30</td></tr>
+              <tr style="background:var(--warn-bg)"><td colspan="2" style="font-style:italic;color:var(--warn)">⏱ Hora clínica — 1h</td><td style="color:var(--warn)">R$ 75,83</td></tr>
+              <tr style="background:var(--accent2)"><td colspan="2"><strong>Custo total</strong></td><td><strong>R$ 79,86</strong></td></tr>
+            </tbody>
+          </table>
+          <div class="mock-resultado">
+            <div class="mock-cenario">
+              <div class="mock-cenario-nome">Cenário 1</div>
+              <div class="mock-cenario-preco">R$ 120,00</div>
+              <div class="mock-cenario-info">Lucro: R$ 40,14<br>Margem: 33%</div>
+            </div>
+            <div class="mock-cenario">
+              <div class="mock-cenario-nome">Cenário 2</div>
+              <div class="mock-cenario-preco">R$ 150,00</div>
+              <div class="mock-cenario-info">Lucro: R$ 70,14<br>Margem: 47%</div>
+            </div>
+            <div class="mock-cenario">
+              <div class="mock-cenario-nome">Cenário 3</div>
+              <div class="mock-cenario-preco">R$ 200,00</div>
+              <div class="mock-cenario-info">Lucro: R$ 120,14<br>Margem: 60%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ul class="instrucoes" style="margin-top:20px">
+        <li>
+          <div class="ico">✓</div>
+          <div class="txt">
+            <strong>Custo total do protocolo</strong>
+            <span>É quanto custa para você realizar o procedimento, incluindo materiais e seu tempo de trabalho. Nunca cobre abaixo deste valor.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">✓</div>
+          <div class="txt">
+            <strong>Lucro</strong>
+            <span>A diferença entre o preço cobrado e o custo total. Sempre positivo é sinal de saúde financeira.</span>
+          </div>
+        </li>
+        <li>
+          <div class="ico">✓</div>
+          <div class="txt">
+            <strong>Margem</strong>
+            <span>O lucro em porcentagem sobre o preço de venda. Uma margem acima de 30% é considerada saudável na estética clínica.</span>
+          </div>
+        </li>
+      </ul>
+
+      <div class="dica">
+        <strong>Cenário em vermelho?</strong> Significa que o preço de venda está abaixo do custo. Isso é prejuízo. Ajuste o preço ou reveja os custos.
+      </div>
+    </div>
+  </div>
+
+  <!-- Suporte -->
+  <div class="suporte">
+    <h3>Precisou de ajuda?</h3>
+    <p>Nossa equipe está disponível para tirar dúvidas sobre o sistema, gerar novos códigos de ativação ou atualizar seus dados de acesso.</p>
+    <div class="suporte-info">
+      <div class="suporte-item">
+        <strong>A'01 Negócios</strong>
+        Suporte técnico
+      </div>
+      <div class="suporte-item">
+        <strong>WhatsApp</strong>
+        Atendimento preferencial
+      </div>
+      <div class="suporte-item">
+        <strong>Horário</strong>
+        Seg–Sex, 9h às 18h
+      </div>
+    </div>
+  </div>
+
+  <div class="rodape">
+    Desenvolvido e criado por <strong>A'01 Negócios</strong> · Sistema de Precificação Clínica
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const t = localStorage.getItem('tema-guia') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+  const btn = document.getElementById('temaBtn');
+  if (btn) btn.textContent = t === 'dark' ? '☀ Modo claro' : '🌙 Modo escuro';
+})();
+
+function alternarTema() {
+  const atual = document.documentElement.getAttribute('data-theme');
+  const novo = atual === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', novo);
+  localStorage.setItem('tema-guia', novo);
+  document.getElementById('temaBtn').textContent = novo === 'dark' ? '☀ Modo claro' : '🌙 Modo escuro';
+}
+</script>
+</body>
+</html>

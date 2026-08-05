@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Protocolos</h1>
+
+<details class="form-protocolo" id="form-novo">
+  <summary>+ Novo Protocolo</summary>
+  <form method="POST" action="{{ url_for('protocolo_salvar') }}">
+    <input type="hidden" name="id" id="prot_id">
+
+    <label>Nome do protocolo</label>
+    <input type="text" name="nome" id="prot_nome" required placeholder="Ex: Limpeza de Pele Completa">
+
+    <!-- Hora clínica -->
+    <div class="campo-hora-clinica">
+      <div class="hora-header">
+        <label>Tempo de atendimento (hora clínica)</label>
+        <span class="nota-hora-inline">
+          ℹ O tempo que você dedica ao procedimento tem custo. Inclua sempre para precificar corretamente.
+        </span>
+      </div>
+      <div class="hora-opcoes">
+        {% for val, label in [
+          (0, "Não incluir"),
+          (0.25, "15 min"), (0.5, "30 min"), (0.75, "45 min"),
+          (1.0, "1h"), (1.5, "1h 30min"), (2.0, "2h"),
+          (2.5, "2h 30min"), (3.0, "3h"), (4.0, "4h")
+        ] %}
+        <label class="hora-chip">
+          <input type="radio" name="horas_clinica" value="{{ val }}"
+                 id="prot_horas" {% if val == 0 %}checked{% endif %}>
+          <span>{{ label }}</span>
+        </label>
+        {% endfor %}
+      </div>
+      {% if hora_com_lucro %}
+      <div class="hora-custo-preview">
+        Valor da hora clínica configurada: <strong>R$ {{ "%.2f"|format(hora_com_lucro) }}/h</strong>
+        — selecione o tempo para ver o custo incluído no total.
+      </div>
+      {% else %}
+      <div class="hora-custo-preview aviso">
+        Configure seus custos em <a href="{{ url_for('configuracoes') }}">Configurações</a>
+        para que a hora clínica seja calculada automaticamente.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Insumos -->
+    <h4>Insumos utilizados</h4>
+    <div id="itens-form"></div>
+    <button type="button" class="btn-add" onclick="adicionarItem()">+ Adicionar insumo</button>
+
+    <!-- Preços -->
+    <h4>Cenários de preço de venda</h4>
+    <div class="grid-3">
+      <div>
+        <label>Cenário 1 (R$)</label>
+        <input type="number" step="0.01" name="preco1" id="prot_p1" placeholder="0,00">
+      </div>
+      <div>
+        <label>Cenário 2 (R$)</label>
+        <input type="number" step="0.01" name="preco2" id="prot_p2" placeholder="0,00">
+      </div>
+      <div>
+        <label>Cenário 3 (R$)</label>
+        <input type="number" step="0.01" name="preco3" id="prot_p3" placeholder="0,00">
+      </div>
+    </div>
+
+    <button type="submit" class="btn-primario">Salvar protocolo</button>
+  </form>
+</details>
+
+<!-- Lista de protocolos -->
+{% for pd in protocolos_dados %}
+{% set p = pd.protocolo %}
+<div class="card-protocolo">
+  <div class="prot-header">
+    <strong>{{ p.nome }}</strong>
+    <a href="{{ url_for('protocolo_excluir', id=p.id) }}"
+       onclick="return confirm('Excluir {{ p.nome }}?')" class="btn-excluir">Excluir</a>
+  </div>
+
+  <table>
+    <thead>
+      <tr><th>Item</th><th>Qtd</th><th>Custo</th></tr>
+    </thead>
+    <tbody>
+      {% for item in pd.itens %}
+      <tr>
+        <td>{{ item.nome }}</td>
+        <td>{{ item.quantidade }}</td>
+        <td>R$ {{ "%.2f"|format(item.custo) }}</td>
+      </tr>
+      {% endfor %}
+
+      {% if p.horas_clinica and p.horas_clinica > 0 %}
+      <tr class="linha-hora">
+        <td>
+          <span class="tag-hora">⏱ Hora clínica</span>
+          {{ formatar_horas(p.horas_clinica) }}
+        </td>
+        <td>—</td>
+        <td>R$ {{ "%.2f"|format(pd.custo_hora) }}</td>
+      </tr>
+      {% endif %}
+
+      <tr class="total-row">
+        <td colspan="2"><strong>Custo total do protocolo</strong></td>
+        <td><strong>R$ {{ "%.2f"|format(pd.custo_total) }}</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="cenarios">
+    {% for preco, label in [(p.preco1,'Cenário 1'),(p.preco2,'Cenário 2'),(p.preco3,'Cenário 3')] %}
+    {% if preco %}
+    {% set lucro = preco - pd.custo_total %}
+    {% set margem = (lucro / preco * 100) if preco > 0 else 0 %}
+    <div class="cenario {% if lucro < 0 %}cenario-negativo{% endif %}">
+      <div class="cenario-label">{{ label }}</div>
+      <div class="cenario-preco">R$ {{ "%.2f"|format(preco) }}</div>
+      <div>Lucro: R$ {{ "%.2f"|format(lucro) }}</div>
+      <div>Margem: {{ "%.1f"|format(margem) }}%</div>
+    </div>
+    {% endif %}
+    {% endfor %}
+  </div>
+</div>
+{% else %}
+<div class="vazio">Nenhum protocolo cadastrado. Clique em "+ Novo Protocolo" para começar.</div>
+{% endfor %}
+
+<script>
+const insumos = [
+  {% for i in insumos %}
+  {id: {{ i.id }}, nome: "{{ i.nome }}", custo: {{ i.custo_unitario }}, unidade: "{{ i.unidade }}"},
+  {% endfor %}
+];
+const horaValor = {{ hora_com_lucro }};
+
+function adicionarItem() {
+  let opts = '<option value="">Selecione o insumo</option>';
+  insumos.forEach(i => opts += `<option value="${i.id}" data-custo="${i.custo}" data-un="${i.unidade}">${i.nome} (${i.unidade})</option>`);
+  const div = document.createElement('div');
+  div.className = 'linha-insumo';
+  div.innerHTML = `<select name="insumo_id" onchange="atualizarCusto(this)">${opts}</select>
+    <input type="number" step="0.001" name="quantidade" placeholder="Qtd" min="0" oninput="atualizarCusto(this.closest('.linha-insumo').querySelector('select'))">
+    <span class="custo-item">R$ 0,00</span>
+    <button type="button" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('itens-form').appendChild(div);
+}
+
+function atualizarCusto(sel) {
+  const linha = sel.closest('.linha-insumo');
+  const opt   = sel.selectedOptions[0];
+  const custo = parseFloat(opt.dataset.custo || 0);
+  const qtd   = parseFloat(linha.querySelector('input').value || 0);
+  const span  = linha.querySelector('.custo-item');
+  span.textContent = 'R$ ' + (custo * qtd).toFixed(2).replace('.', ',');
+}
+</script>
+{% endblock %}

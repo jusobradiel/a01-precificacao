@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ativação — A'01 Precificação</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="pagina-central">
+<div class="card-central">
+  <div class="logo-grande">A'01</div>
+  <h2>Ativação do Sistema</h2>
+  <p>Digite o código de ativação fornecido pelo suporte.</p>
+
+  {% with msgs = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in msgs %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <form method="POST">
+    <input type="text" name="chave" placeholder="Código de ativação"
+           autocomplete="off" autofocus required>
+    <button type="submit">Ativar</button>
+  </form>
+</div>
+<script>
+  const t = localStorage.getItem('tema') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+</script>
+</body>
+</html>

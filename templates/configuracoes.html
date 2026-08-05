@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Configurações</h1>
+
+<form method="POST" enctype="multipart/form-data">
+
+  <!-- Logo -->
+  <div class="secao">
+    <h3>Logo da Clínica</h3>
+    {% if tenant.logo_base64 %}
+    <div class="logo-atual">
+      <img src="{{ tenant.logo_base64 }}" alt="Logo atual" class="logo-preview">
+      <div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:8px">Logo atual</div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer;color:var(--danger)">
+          <input type="checkbox" name="remover_logo" value="1"> Remover logo
+        </label>
+      </div>
+    </div>
+    {% endif %}
+    <div class="campo">
+      <label>{{ 'Trocar logo' if tenant.logo_base64 else 'Adicionar logo' }} (PNG/JPG, máx. 1MB)</label>
+      <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" onchange="previewLogo(this)">
+      <img id="logo-preview-novo" src="" alt="" style="display:none;max-height:56px;margin-top:8px;border-radius:6px;border:1px solid var(--border)">
+    </div>
+  </div>
+
+  <!-- Dados gerais -->
+  <div class="secao">
+    <h3>Dados da Clínica</h3>
+    <div class="grid-2">
+      <div class="campo">
+        <label>Nome da clínica / profissional</label>
+        <input type="text" name="nome_clinica" value="{{ config.nome_clinica or '' }}" placeholder="Ex: Dra. Ana Carvalho">
+      </div>
+      <div class="campo">
+        <label>Retirada mensal — Pró-labore (R$)</label>
+        <input type="number" step="0.01" name="pro_labore" value="{{ config.pro_labore or 0 }}">
+      </div>
+      <div class="campo">
+        <label>Horas clínicas por mês</label>
+        <input type="number" step="0.5" name="horas_mes" value="{{ config.horas_mes or 160 }}">
+      </div>
+      <div class="campo">
+        <label>Margem de lucro desejada (%)</label>
+        <input type="number" step="0.1" name="lucro_desejado" value="{{ config.lucro_desejado or 30 }}">
+      </div>
+    </div>
+  </div>
+
+  <!-- Custos Fixos -->
+  <div class="secao">
+    <div class="secao-header">
+      <div>
+        <h3>Custos Fixos</h3>
+        <p class="secao-desc">Valores que não mudam todo mês: aluguel, contador, seguros.</p>
+      </div>
+      <div class="total-badge">Total: R$ {{ "%.2f"|format(total_fixos) }}</div>
+    </div>
+    <div class="sugestoes">
+      <span class="sugestao-label">Sugestões:</span>
+      {% for s in ["Aluguel","Energia elétrica","Água","Internet","Telefone","Contador","Seguro","Salários"] %}
+      <button type="button" class="chip" onclick="addCusto('fixos','{{ s }}')">+ {{ s }}</button>
+      {% endfor %}
+    </div>
+    <div class="lista-custos" id="fixos">
+      {% for c in fixos %}
+      <div class="linha-custo">
+        <input type="text" name="fixo_nome" value="{{ c.nome }}" placeholder="Descrição">
+        <div class="custo-valor-wrap"><span class="prefix">R$</span>
+          <input type="number" step="0.01" name="fixo_valor" value="{{ c.valor }}" placeholder="0,00"></div>
+        <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn-add" onclick="addCusto('fixos')">+ Adicionar custo fixo</button>
+  </div>
+
+  <!-- Custos Variáveis -->
+  <div class="secao">
+    <div class="secao-header">
+      <div>
+        <h3>Custos Variáveis</h3>
+        <p class="secao-desc">Valores que oscilam: materiais, marketing, manutenção.</p>
+      </div>
+      <div class="total-badge">Total: R$ {{ "%.2f"|format(total_variaveis) }}</div>
+    </div>
+    <div class="sugestoes">
+      <span class="sugestao-label">Sugestões:</span>
+      {% for s in ["Material de limpeza","Material de escritório","Marketing","Manutenção","Transporte","Embalagens"] %}
+      <button type="button" class="chip" onclick="addCusto('variaveis','{{ s }}')">+ {{ s }}</button>
+      {% endfor %}
+    </div>
+    <div class="lista-custos" id="variaveis">
+      {% for c in variaveis %}
+      <div class="linha-custo">
+        <input type="text" name="var_nome" value="{{ c.nome }}" placeholder="Descrição">
+        <div class="custo-valor-wrap"><span class="prefix">R$</span>
+          <input type="number" step="0.01" name="var_valor" value="{{ c.valor }}" placeholder="0,00"></div>
+        <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn-add" onclick="addCusto('variaveis')">+ Adicionar custo variável</button>
+  </div>
+
+  <button type="submit" class="btn-primario">Salvar configurações</button>
+</form>
+
+{% if hora_clinica %}
+<div class="secao resultado-hora" style="margin-top:24px">
+  <h3>Sua hora clínica calculada</h3>
+  <div class="resultado-grid">
+    <div class="resultado-item">
+      <div class="resultado-label">Total de custos mensais</div>
+      <div class="resultado-valor">R$ {{ "%.2f"|format(total_custos) }}</div>
+    </div>
+    <div class="resultado-item">
+      <div class="resultado-label">Custo por hora</div>
+      <div class="resultado-valor">R$ {{ "%.2f"|format(hora_clinica) }}</div>
+    </div>
+    <div class="resultado-item destaque">
+      <div class="resultado-label">Hora com {{ config.lucro_desejado|int }}% de lucro</div>
+      <div class="resultado-valor">R$ {{ "%.2f"|format(hora_com_lucro) }}</div>
+    </div>
+  </div>
+  <p class="nota-hora">Este valor é aplicado automaticamente nos protocolos conforme o tempo de atendimento.</p>
+</div>
+{% endif %}
+
+<script>
+function addCusto(lista, nome) {
+  const isFixo = lista === 'fixos';
+  const div = document.createElement('div');
+  div.className = 'linha-custo';
+  div.innerHTML =
+    '<input type="text" name="' + (isFixo?'fixo_nome':'var_nome') + '" value="' + (nome||'') + '" placeholder="Descrição">' +
+    '<div class="custo-valor-wrap"><span class="prefix">R$</span>' +
+    '<input type="number" step="0.01" name="' + (isFixo?'fixo_valor':'var_valor') + '" placeholder="0,00"></div>' +
+    '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';
+  document.getElementById(lista).appendChild(div);
+  div.querySelector('input[type=number]').focus();
+}
+function previewLogo(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('logo-preview-novo');
+    img.src = e.target.result; img.style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+}
+</script>
+{% endblock %}

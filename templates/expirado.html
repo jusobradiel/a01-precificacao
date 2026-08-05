@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Acesso expirado — Precificação Clínica</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+<div class="expirado-page">
+  <div class="expirado-card">
+    <div class="expirado-icon">⏳</div>
+    <h1 style="margin-bottom:12px">Período de acesso encerrado</h1>
+    <p style="color:var(--muted);margin-bottom:8px">Seu teste gratuito chegou ao fim. Para continuar, entre em contato com a A'01 Negócios — após a confirmação, seu acesso é reativado na hora.</p>
+    <a href="https://wa.me/5500000000000" target="_blank" class="btn-primario full" style="margin-top:24px;justify-content:center">
+      Falar com a A'01 Negócios →
+    </a>
+    <div class="auth-link" style="margin-top:16px">
+      <a href="{{ url_for('login') }}">← Voltar ao login</a>
+    </div>
+    <div style="margin-top:28px;font-size:11px;color:var(--muted)">Desenvolvido por <strong>A'01 Negócios</strong></div>
+  </div>
+</div>
+<script>document.documentElement.setAttribute('data-theme', localStorage.getItem('tema') || 'light');</script>
+</body>
+</html>

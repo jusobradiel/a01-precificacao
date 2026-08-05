@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<h1>Painel A'01 — Clientes</h1>
+
+<div class="painel-stats">
+  <div class="pstat"><div class="pstat-num">{{ total_ativos }}</div><div class="pstat-label">Ativos</div></div>
+  <div class="pstat"><div class="pstat-num">{{ total_trial }}</div><div class="pstat-label">Em teste</div></div>
+  <div class="pstat"><div class="pstat-num">{{ total_expirados }}</div><div class="pstat-label">Expirados</div></div>
+</div>
+
+{% if data %}
+<div class="secao" style="padding:0;overflow:hidden">
+  <div class="tabela-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>E-mail</th>
+          <th>Status</th>
+          <th>Cadastro</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in data %}{% set t = d.tenant %}
+        <tr>
+          <td><strong>{{ t.nome_negocio }}</strong></td>
+          <td style="font-size:13px">{{ d.email_admin }}</td>
+          <td>
+            {% if t.status == 'ativo' %}
+              <span class="badge-status badge-ativo">Ativo</span>
+            {% elif t.status == 'trial' and t.esta_ativo() %}
+              <span class="badge-status badge-trial">Teste — {{ d.dias_restantes }}d</span>
+            {% else %}
+              <span class="badge-status badge-inativo">Expirado</span>
+            {% endif %}
+          </td>
+          <td style="font-size:13px;color:var(--muted)">{{ t.data_cadastro.strftime('%d/%m/%Y') }}</td>
+          <td>
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              {% if t.status != 'ativo' %}
+              <form method="POST" action="{{ url_for('ativar_tenant', tid=t.id) }}" style="margin:0">
+                <button type="submit" class="btn-secundario" style="font-size:12px;padding:5px 12px">✓ Ativar</button>
+              </form>
+              {% endif %}
+              {% if t.status != 'inativo' %}
+              <form method="POST" action="{{ url_for('desativar_tenant', tid=t.id) }}" style="margin:0"
+                    onsubmit="return confirm('Desativar {{ t.nome_negocio }}?')">
+                <button type="submit" class="btn-perigo" style="font-size:12px;padding:5px 12px">✕ Desativar</button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="secao" style="text-align:center;color:var(--muted);padding:40px">
+  Nenhum cliente cadastrado ainda.
+</div>
+{% endif %}
+{% endblock %}
