@@ -255,6 +255,10 @@ def logout():
 def expirado():
     return render_template("expirado.html")
 
+@app.route("/esqueci-senha")
+def esqueci_senha():
+    return render_template("esqueci_senha.html")
+
 # ── Painel A'01 (super admin) ─────────────────────────────────────────────────
 
 @app.route("/painel-a01")
