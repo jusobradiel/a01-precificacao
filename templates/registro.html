@@ -9,8 +9,8 @@
 <body>
 <div class="auth-page">
   <div class="auth-card">
-    <div class="auth-logo">A'01</div>
-    <div class="auth-sub">Crie sua conta — 7 dias grátis</div>
+    <img src="{{ url_for('static', filename='images/logo-preta.png') }}" alt="A'01 MUD" class="auth-logo-img">
+    <div class="auth-sub">Precificação de Serviços</div>
 
     {% with msgs = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in msgs %}
@@ -34,11 +34,6 @@
       <div class="campo">
         <label>Confirmar senha *</label>
         <input type="password" name="confirmar_senha" placeholder="••••••••" required minlength="6">
-      </div>
-      <div class="campo">
-        <label>Logo (opcional — PNG/JPG, máx. 1MB)</label>
-        <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" onchange="previewLogo(this)">
-        <img id="logo-preview" src="" alt="" style="display:none;max-height:56px;margin-top:8px;border-radius:6px;border:1px solid var(--border)">
       </div>
       <button type="submit" class="btn-primario full">Criar conta e começar →</button>
     </form>

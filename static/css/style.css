@@ -183,6 +183,8 @@ tr:hover td{background:var(--accent2)}
 .auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:20px}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:40px 36px;width:100%;max-width:420px;box-shadow:var(--shadow)}
 .auth-logo{text-align:center;font-size:26px;font-weight:800;color:var(--primary);margin-bottom:4px}
+.auth-logo-img{display:block;max-height:52px;max-width:200px;margin:0 auto 12px;object-fit:contain}
+.marca-logo-a01{display:block;max-height:28px;max-width:120px;margin:8px auto 0;opacity:0.55;object-fit:contain}
 .auth-sub{text-align:center;font-size:13px;color:var(--muted);margin-bottom:28px}
 .auth-link{text-align:center;font-size:13px;color:var(--muted);margin-top:18px}
 .auth-link a{color:var(--accent);font-weight:600}

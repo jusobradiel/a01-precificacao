@@ -212,7 +212,7 @@ def registro():
         db.session.add(config)
 
         db.session.commit()
-        flash(f"Conta criada! Você tem {DIAS_TRIAL} dias de teste gratuito.", "success")
+        flash("Conta criada com sucesso! Faça login para começar.", "success")
         return redirect(url_for("login"))
 
     return render_template("registro.html")

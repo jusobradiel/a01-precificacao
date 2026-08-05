@@ -26,7 +26,7 @@
         <img src="{{ logo_base64 }}" alt="Logo" class="sidebar-logo">
       {% endif %}
       <div class="clinica-nome">{{ nome_clinica }}</div>
-      <div class="clinica-sub">Precificação Clínica</div>
+      <div class="clinica-sub">Precificação de Serviços</div>
     </div>
 
     <nav>
@@ -57,17 +57,11 @@
       <button class="btn-tema" onclick="alternarTema()">
         <span id="icone-tema">🌙</span> <span id="label-tema">Modo escuro</span>
       </button>
-      <div class="marca-a01">Desenvolvido por A'01 Negócios</div>
+      <img src="{{ url_for('static', filename='images/logo-branca.png') }}" alt="A'01 MUD" class="marca-logo-a01">
     </div>
   </aside>
 
   <div class="pagina">
-    {% if dias_restantes is not none %}
-    <div class="banner-trial">
-      ⏳ <strong>Teste gratuito:</strong> {{ dias_restantes }} dia{{ 's' if dias_restantes != 1 else '' }} restante{{ 's' if dias_restantes != 1 else '' }}.
-      <a href="https://wa.me/5500000000000" target="_blank">Ativar conta →</a>
-    </div>
-    {% endif %}
 
     <main class="conteudo">
       {% with msgs = get_flashed_messages(with_categories=true) %}

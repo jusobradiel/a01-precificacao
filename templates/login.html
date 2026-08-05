@@ -9,8 +9,8 @@
 <body>
 <div class="auth-page">
   <div class="auth-card">
-    <div class="auth-logo">A'01</div>
-    <div class="auth-sub">Precificação Clínica</div>
+    <img src="{{ url_for('static', filename='images/logo-preta.png') }}" alt="A'01 MUD" class="auth-logo-img">
+    <div class="auth-sub">Precificação de Serviços</div>
 
     {% with msgs = get_flashed_messages(with_categories=true) %}
       {% for cat, msg in msgs %}
