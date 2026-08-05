@@ -12,7 +12,7 @@
   <a href="{{ url_for('configuracoes') }}" class="stat" style="text-decoration:none">
     <div class="stat-label">Hora Clínica</div>
     {% if hora_lucro %}
-    <div class="stat-valor">R$ {{ "%.2f"|format(hora_lucro) }}</div>
+    <div class="stat-valor">{{ hora_lucro | brl }}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:4px">por hora</div>
     {% else %}
     <div class="stat-valor" style="font-size:18px;color:var(--muted)">Configure</div>
