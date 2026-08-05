@@ -322,6 +322,8 @@ def dashboard():
 @login_required
 @tenant_ativo
 def configuracoes():
+    if session.get("is_super_admin"):
+        return redirect(url_for("painel_a01"))
     tid    = session["tenant_id"]
     tenant = db.session.get(Tenant, tid)
     config = Configuracao.query.filter_by(tenant_id=tid).first()
