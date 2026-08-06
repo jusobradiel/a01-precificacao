@@ -247,8 +247,8 @@ tr:hover td{background:var(--accent2)}
   .conteudo{padding:16px}
   .banner-trial{padding:10px 16px}
   .grid-2,.grid-3,.grid-4,.stat-grid,.resultado-grid,.painel-stats,.cenarios{grid-template-columns:1fr}
-  .linha-custo{flex-direction:column;align-items:stretch}
-  .custo-valor-wrap{width:100%}
+  .linha-custo input[type=text]{min-width:0}
+  .custo-valor-wrap{flex-shrink:0;width:120px}
   .secao-header{flex-direction:column}
   h1{font-size:18px;margin-bottom:16px}
   th,td{padding:9px 10px;font-size:13px}
