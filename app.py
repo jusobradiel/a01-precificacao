@@ -73,6 +73,7 @@ class Configuracao(db.Model):
     id                    = db.Column(db.Integer, primary_key=True)
     tenant_id             = db.Column(db.Integer, db.ForeignKey("tenant.id"), unique=True, nullable=False)
     nome_clinica          = db.Column(db.String(200), default="Minha Clínica")
+    regime_tributario     = db.Column(db.String(50), default="")
     pro_labore            = db.Column(db.Float, default=0)
     horas_mes             = db.Column(db.Float, default=160)
     lucro_desejado        = db.Column(db.Float, default=30)
@@ -428,8 +429,9 @@ def configuracoes():
         db.session.commit()
 
     if request.method == "POST":
-        config.nome_clinica   = request.form.get("nome_clinica", "").strip()
-        config.pro_labore     = float(request.form.get("pro_labore", 0) or 0)
+        config.nome_clinica       = request.form.get("nome_clinica", "").strip()
+        config.regime_tributario  = request.form.get("regime_tributario", "")
+        config.pro_labore         = float(request.form.get("pro_labore", 0) or 0)
         config.horas_mes      = float(request.form.get("horas_mes", 160) or 160)
         config.lucro_desejado = float(request.form.get("lucro_desejado", 30) or 30)
 
@@ -606,7 +608,6 @@ def protocolo_excluir(id):
 def init_db():
     with app.app_context():
         db.create_all()
-        # Migração: adiciona coluna ultimo_acesso se não existir
         try:
             if db_url.startswith("postgresql"):
                 db.session.execute(db.text(
@@ -614,6 +615,16 @@ def init_db():
             else:
                 db.session.execute(db.text(
                     "ALTER TABLE usuario ADD COLUMN ultimo_acesso TIMESTAMP"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        try:
+            if db_url.startswith("postgresql"):
+                db.session.execute(db.text(
+                    "ALTER TABLE configuracao ADD COLUMN IF NOT EXISTS regime_tributario VARCHAR(50) DEFAULT ''"))
+            else:
+                db.session.execute(db.text(
+                    "ALTER TABLE configuracao ADD COLUMN regime_tributario VARCHAR(50) DEFAULT ''"))
             db.session.commit()
         except Exception:
             db.session.rollback()

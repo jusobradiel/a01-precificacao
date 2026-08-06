@@ -13,6 +13,16 @@
         <input type="text" name="nome_clinica" value="{{ config.nome_clinica or '' }}" placeholder="Ex: Dra. Ana Carvalho">
       </div>
       <div class="campo">
+        <label>Regime tributário</label>
+        <select name="regime_tributario">
+          <option value="" {% if not config.regime_tributario %}selected{% endif %}>Não informado</option>
+          <option value="MEI" {% if config.regime_tributario == 'MEI' %}selected{% endif %}>MEI</option>
+          <option value="Simples Nacional" {% if config.regime_tributario == 'Simples Nacional' %}selected{% endif %}>Simples Nacional</option>
+          <option value="Lucro Presumido" {% if config.regime_tributario == 'Lucro Presumido' %}selected{% endif %}>Lucro Presumido</option>
+          <option value="Lucro Real" {% if config.regime_tributario == 'Lucro Real' %}selected{% endif %}>Lucro Real</option>
+        </select>
+      </div>
+      <div class="campo">
         <label title="O quanto você quer/precisa receber mensal">Pró-labore (R$) — Retirada mensal</label>
         <input type="number" step="0.01" name="pro_labore" value="{{ config.pro_labore or 0 }}">
       </div>

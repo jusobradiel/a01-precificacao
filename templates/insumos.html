@@ -50,8 +50,8 @@
           <td><strong>{{ i.nome }}</strong></td>
           <td>{{ i.unidade }}</td>
           <td>{{ i.qtd_embalagem }}</td>
-          <td>R$ {{ "%.2f"|format(i.custo_embalagem) }}</td>
-          <td><strong>R$ {{ "%.4f"|format(i.custo_unitario) }}</strong></td>
+          <td>{{ i.custo_embalagem | brl }}</td>
+          <td><strong>{{ i.custo_unitario | brl }}</strong></td>
           <td>
             <div style="display:flex;gap:6px;justify-content:flex-end">
               <button class="btn-icon btn-icon-editar"

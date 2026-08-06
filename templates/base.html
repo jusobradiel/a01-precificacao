@@ -41,7 +41,7 @@
         <i data-feather="package"></i> Insumos
       </a>
       <a href="{{ url_for('protocolos') }}" class="{% if request.endpoint=='protocolos' %}active{% endif %}" onclick="fecharSidebar()">
-        <i data-feather="clipboard"></i> Protocolos
+        <i data-feather="clipboard"></i> Ficha Técnica
       </a>
       {% if session.get('is_super_admin') %}
       <a href="{{ url_for('painel_a01') }}" class="{% if request.endpoint=='painel_a01' %}active{% endif %}" onclick="fecharSidebar()">

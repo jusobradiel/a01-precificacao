@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 {% block conteudo %}
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-  <h1 style="margin:0">Protocolos</h1>
+  <h1 style="margin:0">Fichas Técnicas</h1>
   <button class="btn-primario" onclick="toggleFormNovo()" id="btn-novo">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-    Novo Protocolo
+    Nova Ficha Técnica
   </button>
 </div>
 
@@ -31,7 +31,7 @@
 {% endif %}
 
 <div class="secao form-protocolo" id="form-novo" style="display:none">
-  <h3 style="margin-bottom:16px" id="form-titulo">Novo Protocolo</h3>
+  <h3 style="margin-bottom:16px" id="form-titulo">Nova Ficha Técnica</h3>
   <form method="POST" action="{{ url_for('protocolo_salvar') }}">
     <input type="hidden" name="id" id="prot_id">
 
@@ -91,7 +91,7 @@
     </div>
 
     <div style="display:flex;gap:10px">
-      <button type="submit" class="btn-primario">Salvar protocolo</button>
+      <button type="submit" class="btn-primario">Salvar ficha técnica</button>
       <button type="button" class="btn-secundario" onclick="cancelarForm()">Cancelar</button>
     </div>
   </form>
@@ -186,7 +186,7 @@ function toggleFormNovo() {
   if (visivel) {
     cancelarForm();
   } else {
-    document.getElementById('form-titulo').textContent = 'Novo Protocolo';
+    document.getElementById('form-titulo').textContent = 'Nova Ficha Técnica';
     document.getElementById('prot_id').value = '';
     document.getElementById('prot_nome').value = '';
     document.getElementById('prot_p1').value = '';
