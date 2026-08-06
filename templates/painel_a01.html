@@ -30,10 +30,8 @@
           <td>
             {% if t.status == 'ativo' %}
               <span class="badge-status badge-ativo">Ativo</span>
-            {% elif t.status == 'trial' and t.esta_ativo() %}
-              <span class="badge-status badge-trial">Teste — {{ d.dias_restantes }}d</span>
             {% else %}
-              <span class="badge-status badge-inativo">Expirado</span>
+              <span class="badge-status badge-inativo">Aguardando</span>
             {% endif %}
           </td>
           <td style="font-size:13px;color:var(--muted)">{{ t.data_cadastro.strftime('%d/%m/%Y') }}</td>

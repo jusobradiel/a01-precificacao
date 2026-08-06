@@ -24,7 +24,6 @@ MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
 
 db = SQLAlchemy(app)
 
-DIAS_TRIAL = 7
 
 # ── Models ────────────────────────────────────────────────────────────────────
 
@@ -222,25 +221,21 @@ def registro():
             flash("Este e-mail já está cadastrado.", "error")
             return render_template("registro.html")
 
-        expiracao = datetime.utcnow() + timedelta(days=DIAS_TRIAL)
-        tenant = Tenant(nome_negocio=nome, status="trial", data_expiracao=expiracao)
+        tenant = Tenant(nome_negocio=nome, status="inativo")
         db.session.add(tenant)
         db.session.flush()
 
         usuario = Usuario(tenant_id=tenant.id, email=email,
                           senha=generate_password_hash(senha), nome=nome,
-                          is_admin=True, ultimo_acesso=datetime.utcnow())
+                          is_admin=True)
         db.session.add(usuario)
 
         config = Configuracao(tenant_id=tenant.id, nome_clinica=nome)
         db.session.add(config)
         db.session.commit()
 
-        session["usuario_id"]     = usuario.id
-        session["tenant_id"]      = tenant.id
-        session["is_admin"]       = True
-        session["is_super_admin"] = False
-        return redirect(url_for("dashboard"))
+        flash("Cadastro realizado! Sua conta será ativada pela A'01 Negócios em breve.", "success")
+        return redirect(url_for("login"))
 
     return render_template("registro.html")
 
@@ -262,7 +257,7 @@ def login():
         if not usuario.is_super_admin:
             tenant = db.session.get(Tenant, usuario.tenant_id)
             if not tenant or not tenant.esta_ativo():
-                flash("Seu período de acesso expirou. Entre em contato com a A'01 Negócios.", "error")
+                flash("Sua conta ainda não foi ativada. Entre em contato com a A'01 Negócios.", "error")
                 return render_template("login.html")
 
         usuario.ultimo_acesso = datetime.utcnow()
