@@ -23,8 +23,9 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
-MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
-MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
+MAIL_USERNAME   = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
+MAIL_PASSWORD   = os.environ.get("MAIL_PASSWORD", "")
+CODIGO_ACESSO   = os.environ.get("CODIGO_ACESSO", "")
 
 db = SQLAlchemy(app)
 
@@ -252,6 +253,10 @@ def registro():
         senha = request.form.get("senha", "")
         conf  = request.form.get("confirmar_senha", "")
 
+        codigo = request.form.get("codigo_acesso", "").strip()
+        if not CODIGO_ACESSO or codigo != CODIGO_ACESSO:
+            flash("Código de acesso inválido.", "error")
+            return render_template("registro.html")
         if not nome or not email or not senha:
             flash("Preencha todos os campos obrigatórios.", "error")
             return render_template("registro.html")
@@ -444,6 +449,21 @@ def desativar_tenant(tid):
         t.status = "inativo"
         db.session.commit()
         flash(f"{t.nome_negocio} desativado.", "warning")
+    return redirect(url_for("painel_a01"))
+
+@app.route("/painel-a01/excluir/<int:tid>", methods=["POST"])
+@login_required
+@super_admin_required
+def excluir_tenant(tid):
+    t = db.session.get(Tenant, tid)
+    if t:
+        Usuario.query.filter_by(tenant_id=tid).delete()
+        Configuracao.query.filter_by(tenant_id=tid).delete()
+        Insumo.query.filter_by(tenant_id=tid).delete()
+        Protocolo.query.filter_by(tenant_id=tid).delete()
+        db.session.delete(t)
+        db.session.commit()
+        flash(f"Conta excluída.", "success")
     return redirect(url_for("painel_a01"))
 
 # ── Dashboard ─────────────────────────────────────────────────────────────────
