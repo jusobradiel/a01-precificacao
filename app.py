@@ -270,21 +270,24 @@ def registro():
             flash("Este e-mail já está cadastrado.", "error")
             return render_template("registro.html")
 
-        tenant = Tenant(nome_negocio=nome, status="inativo")
+        tenant = Tenant(nome_negocio=nome, status="ativo")
         db.session.add(tenant)
         db.session.flush()
 
         usuario = Usuario(tenant_id=tenant.id, email=email,
                           senha=generate_password_hash(senha), nome=nome,
-                          is_admin=True)
+                          is_admin=True, ultimo_acesso=datetime.utcnow())
         db.session.add(usuario)
 
         config = Configuracao(tenant_id=tenant.id, nome_clinica=nome)
         db.session.add(config)
         db.session.commit()
 
-        flash("Cadastro realizado! Sua conta será ativada pela A'01 Negócios em breve.", "success")
-        return redirect(url_for("login"))
+        session["usuario_id"]     = usuario.id
+        session["tenant_id"]      = tenant.id
+        session["is_admin"]       = True
+        session["is_super_admin"] = False
+        return redirect(url_for("dashboard"))
 
     return render_template("registro.html")
 
