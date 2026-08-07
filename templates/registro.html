@@ -19,6 +19,7 @@
     {% endwith %}
 
     <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <div class="campo">
         <label>Nome da clínica ou profissional *</label>
         <input type="text" name="nome_negocio" placeholder="Ex: Dra. Ana Carvalho" required autofocus>

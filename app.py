@@ -1,4 +1,5 @@
-import os, json, base64, threading, webbrowser, secrets, smtplib
+import os, json, base64, threading, webbrowser, secrets, smtplib, time
+from collections import defaultdict
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
@@ -9,7 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "a01-clinica-dev-2026")
+_secret_key = os.environ.get("SECRET_KEY")
+if not _secret_key:
+    raise RuntimeError("SECRET_KEY não definida. Configure a variável de ambiente antes de iniciar.")
+app.secret_key = _secret_key
 
 db_url = os.environ.get("DATABASE_URL", "sqlite:///app.db")
 if db_url.startswith("postgres://"):
@@ -23,6 +27,18 @@ MAIL_USERNAME = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
 MAIL_PASSWORD = os.environ.get("MAIL_PASSWORD", "")
 
 db = SQLAlchemy(app)
+
+# ── Rate limiting ─────────────────────────────────────────────────────────────
+_rate_buckets: dict = defaultdict(list)
+
+def rate_limit_ok(chave: str, max_req: int = 5, janela: int = 300) -> bool:
+    agora = time.time()
+    _rate_buckets[chave] = [t for t in _rate_buckets[chave] if agora - t < janela]
+    if len(_rate_buckets[chave]) >= max_req:
+        return False
+    _rate_buckets[chave].append(agora)
+    return True
+
 
 
 # ── Models ────────────────────────────────────────────────────────────────────
@@ -145,6 +161,33 @@ def qtd_filter(value):
 
 app.jinja_env.globals["formatar_horas"] = formatar_horas
 
+# ── CSRF ──────────────────────────────────────────────────────────────────────
+
+def gerar_csrf_token():
+    if "_csrf_token" not in session:
+        session["_csrf_token"] = secrets.token_hex(32)
+    return session["_csrf_token"]
+
+app.jinja_env.globals["csrf_token"] = gerar_csrf_token
+
+@app.before_request
+def verificar_csrf():
+    if request.method == "POST":
+        token = session.get("_csrf_token")
+        if not token or token != request.form.get("_csrf_token"):
+            abort(403)
+
+# ── Security headers ──────────────────────────────────────────────────────────
+
+@app.after_request
+def add_security_headers(resp):
+    resp.headers["X-Content-Type-Options"]  = "nosniff"
+    resp.headers["X-Frame-Options"]         = "SAMEORIGIN"
+    resp.headers["X-XSS-Protection"]        = "1; mode=block"
+    resp.headers["Referrer-Policy"]         = "strict-origin-when-cross-origin"
+    resp.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    return resp
+
 # ── Context Processor ─────────────────────────────────────────────────────────
 
 @app.context_processor
@@ -247,6 +290,9 @@ def login():
     if "usuario_id" in session:
         return redirect(url_for("dashboard"))
     if request.method == "POST":
+        if not rate_limit_ok(f"login:{request.remote_addr}", max_req=10, janela=300):
+            flash("Muitas tentativas. Aguarde 5 minutos e tente novamente.", "error")
+            return render_template("login.html")
         email   = request.form.get("email", "").strip().lower()
         senha   = request.form.get("senha", "")
         usuario = Usuario.query.filter_by(email=email).first()
@@ -284,6 +330,9 @@ def expirado():
 @app.route("/esqueci-senha", methods=["GET", "POST"])
 def esqueci_senha():
     if request.method == "POST":
+        if not rate_limit_ok(f"reset:{request.remote_addr}", max_req=5, janela=300):
+            flash("Muitas solicitações. Aguarde 5 minutos e tente novamente.", "error")
+            return redirect(url_for("esqueci_senha"))
         email   = request.form.get("email", "").strip().lower()
         usuario = Usuario.query.filter_by(email=email).first()
         if usuario:

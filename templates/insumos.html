@@ -4,6 +4,7 @@
 
 <div class="secao">
   <form method="POST" action="{{ url_for('insumo_salvar') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="id" id="insumo_id">
     <div class="grid-2">
       <div class="campo">

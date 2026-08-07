@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="pt-BR" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -19,6 +19,7 @@
     {% endwith %}
 
     <form method="POST">
+      <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
       <div class="campo">
         <label>Nova senha (mínimo 6 caracteres)</label>
         <div class="input-olho">

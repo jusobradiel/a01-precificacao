@@ -33,6 +33,7 @@
 <div class="secao form-protocolo" id="form-novo" style="display:none">
   <h3 style="margin-bottom:16px" id="form-titulo">Nova Ficha Técnica</h3>
   <form method="POST" action="{{ url_for('protocolo_salvar') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="id" id="prot_id">
 
     <div class="campo">

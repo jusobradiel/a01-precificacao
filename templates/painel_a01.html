@@ -46,12 +46,14 @@
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               {% if t.status != 'ativo' %}
               <form method="POST" action="{{ url_for('ativar_tenant', tid=t.id) }}" style="margin:0">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn-secundario" style="font-size:12px;padding:5px 12px">✓ Ativar</button>
               </form>
               {% endif %}
               {% if t.status != 'inativo' %}
               <form method="POST" action="{{ url_for('desativar_tenant', tid=t.id) }}" style="margin:0"
                     onsubmit="return confirm('Desativar {{ t.nome_negocio }}?')">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="btn-perigo" style="font-size:12px;padding:5px 12px">✕ Desativar</button>
               </form>
               {% endif %}

@@ -3,6 +3,7 @@
 <h1>Configurações</h1>
 
 <form method="POST" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
   <!-- Dados gerais -->
   <div class="secao">
@@ -121,6 +122,7 @@
 <div class="secao" style="margin-top:24px">
   <h3>Logo da Clínica</h3>
   <form method="POST" enctype="multipart/form-data">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     {% if tenant.logo_base64 %}
     <div class="logo-atual">
       <img src="{{ tenant.logo_base64 }}" alt="Logo atual" class="logo-preview">
