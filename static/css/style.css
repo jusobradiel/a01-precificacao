@@ -238,6 +238,48 @@ tr:hover td{background:var(--accent2)}
 .expirado-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:48px 36px;width:100%;max-width:420px;text-align:center;box-shadow:var(--shadow)}
 .expirado-icon{font-size:48px;margin-bottom:16px}
 
+/* ── Hint (texto auxiliar abaixo de inputs) ── */
+.hint{font-size:12px;color:var(--muted);margin-top:4px;display:block;line-height:1.4}
+
+/* ── Custos variáveis com fornecedor ── */
+.linha-custo-var{flex-wrap:wrap}
+.linha-custo-var input[type=text]{flex:1;min-width:120px}
+.input-fornecedor{flex:0 0 160px !important;color:var(--muted)}
+
+/* ── Taxas de Cartão ── */
+.linha-cartao{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.linha-cartao input[type=text]{flex:1;min-width:100px}
+.cartao-parc-wrap{display:flex;align-items:center;gap:4px;flex-shrink:0}
+.cartao-parc-wrap input{width:52px}
+.cartao-taxa-wrap{width:190px !important}
+
+/* ── Chip expandir (protocolos) ── */
+.chip-expandir{margin-top:6px;font-size:12px}
+.hora-chips{flex-wrap:wrap}
+
+/* ── Farol de cenário ── */
+.cenario-farol{width:12px;height:12px;border-radius:50%;margin:0 auto 8px}
+.farol-verde   {background:var(--success);box-shadow:0 0 5px var(--success)}
+.farol-amarelo {background:var(--warn);box-shadow:0 0 5px var(--warn)}
+.farol-vermelho{background:var(--danger);box-shadow:0 0 5px var(--danger)}
+.cenario-verde  {border-color:var(--success)}
+.cenario-amarelo{border-color:var(--warn)}
+.cenario-vermelho{border-color:var(--danger);background:var(--danger-bg)}
+
+/* ── Protocolos — card e layout ── */
+.card-protocolo{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+.prot-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:8px;flex-wrap:wrap}
+.tag-hora{background:var(--accent2);color:var(--accent);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:600;margin-right:6px}
+.hora-custo-preview{font-size:13px;color:var(--muted);margin-top:8px}
+.hora-custo-preview.aviso{color:var(--warn)}
+.hora-custo-preview a{color:var(--warn);text-decoration:underline}
+.linha-hora td{background:var(--accent2);font-size:13px}
+.total-row td{background:var(--bg);font-weight:600;border-top:2px solid var(--border)}
+.linha-insumo{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.linha-insumo select{flex:1}
+.linha-insumo input{width:80px}
+.custo-item{font-size:13px;color:var(--muted);white-space:nowrap;min-width:70px}
+
 /* ── Mobile ── */
 @media(max-width:768px){
   .sidebar{transform:translateX(-100%)}

@@ -96,6 +96,8 @@ class Configuracao(db.Model):
     lucro_desejado        = db.Column(db.Float, default=30)
     custos_fixos_json     = db.Column(db.Text, default="[]")
     custos_variaveis_json = db.Column(db.Text, default="[]")
+    imposto_pct           = db.Column(db.Float, default=0)
+    cartoes_json          = db.Column(db.Text, default="[]")
 
 class Insumo(db.Model):
     __tablename__   = "insumo"
@@ -512,10 +514,21 @@ def configuracoes():
         config.custos_fixos_json = json.dumps(
             [{"nome": n, "valor": float(v or 0)} for n, v in zip(nomes_f, valores_f) if n.strip()])
 
-        nomes_v   = request.form.getlist("var_nome")
-        valores_v = request.form.getlist("var_valor")
+        nomes_v        = request.form.getlist("var_nome")
+        valores_v      = request.form.getlist("var_valor")
+        fornecedores_v = request.form.getlist("var_fornecedor")
         config.custos_variaveis_json = json.dumps(
-            [{"nome": n, "valor": float(v or 0)} for n, v in zip(nomes_v, valores_v) if n.strip()])
+            [{"nome": n, "valor": float(v or 0), "fornecedor": f}
+             for n, v, f in zip(nomes_v, valores_v, fornecedores_v) if n.strip()])
+
+        config.imposto_pct = float(request.form.get("imposto_pct", 0) or 0)
+
+        bandeiras_c = request.form.getlist("cartao_bandeira")
+        parcelas_c  = request.form.getlist("cartao_parcelas")
+        taxas_c     = request.form.getlist("cartao_taxa")
+        config.cartoes_json = json.dumps(
+            [{"bandeira": b, "parcelas": max(1, int(p or 1)), "taxa": float(t or 0)}
+             for b, p, t in zip(bandeiras_c, parcelas_c, taxas_c) if b.strip()])
 
         logo_file = request.files.get("logo")
         if logo_file and logo_file.filename:
@@ -533,13 +546,14 @@ def configuracoes():
 
     fixos     = json.loads(config.custos_fixos_json or "[]")
     variaveis = json.loads(config.custos_variaveis_json or "[]")
+    cartoes   = json.loads(config.cartoes_json or "[]")
     hora_clinica, hora_com_lucro = calcular_hora_clinica(config)
     total_fixos     = sum(c["valor"] for c in fixos)
     total_variaveis = sum(c["valor"] for c in variaveis)
     total_custos    = total_fixos + total_variaveis + (config.pro_labore or 0)
 
     return render_template("configuracoes.html", config=config, tenant=tenant,
-                           fixos=fixos, variaveis=variaveis,
+                           fixos=fixos, variaveis=variaveis, cartoes=cartoes,
                            hora_clinica=hora_clinica, hora_com_lucro=hora_com_lucro,
                            total_fixos=total_fixos, total_variaveis=total_variaveis,
                            total_custos=total_custos)
@@ -697,6 +711,26 @@ def init_db():
             else:
                 db.session.execute(db.text(
                     "ALTER TABLE configuracao ADD COLUMN regime_tributario VARCHAR(50) DEFAULT ''"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        try:
+            if db_url.startswith("postgresql"):
+                db.session.execute(db.text(
+                    "ALTER TABLE configuracao ADD COLUMN IF NOT EXISTS imposto_pct FLOAT DEFAULT 0"))
+            else:
+                db.session.execute(db.text(
+                    "ALTER TABLE configuracao ADD COLUMN imposto_pct FLOAT DEFAULT 0"))
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+        try:
+            if db_url.startswith("postgresql"):
+                db.session.execute(db.text(
+                    "ALTER TABLE configuracao ADD COLUMN IF NOT EXISTS cartoes_json TEXT DEFAULT '[]'"))
+            else:
+                db.session.execute(db.text(
+                    "ALTER TABLE configuracao ADD COLUMN cartoes_json TEXT DEFAULT '[]'"))
             db.session.commit()
         except Exception:
             db.session.rollback()

@@ -8,7 +8,6 @@
   </button>
 </div>
 
-<!-- Cards de visão geral -->
 {% if melhor_margem or mais_lucrativo %}
 <div class="insights-grid" style="margin-bottom:24px">
   {% if melhor_margem %}
@@ -37,25 +36,16 @@
     <input type="hidden" name="id" id="prot_id">
 
     <div class="campo">
-      <label>Nome do protocolo</label>
+      <label>Nome do procedimento</label>
       <input type="text" name="nome" id="prot_nome" required placeholder="Ex: Limpeza de Pele Completa">
     </div>
 
     <div class="campo">
       <label>Tempo de atendimento</label>
-      <div class="hora-chips">
-        {% for val, label in [
-          (0, "Não incluir"),
-          (0.25, "15 min"), (0.5, "30 min"), (0.75, "45 min"),
-          (1.0, "1h"), (1.5, "1h 30min"), (2.0, "2h"),
-          (2.5, "2h 30min"), (3.0, "3h"), (4.0, "4h")
-        ] %}
-        <label class="hora-chip-pill">
-          <input type="radio" name="horas_clinica" value="{{ val }}" {% if val == 0 %}checked{% endif %} style="display:none" id="chip_{{ loop.index }}">
-          <span>{{ label }}</span>
-        </label>
-        {% endfor %}
-      </div>
+      <input type="hidden" name="horas_clinica" id="prot_horas" value="0">
+      <div id="chips-visiveis" class="hora-chips"></div>
+      <button type="button" class="chip chip-expandir" id="btn-mais-chips" onclick="expandirChips()">+ Ver mais horários</button>
+      <div id="chips-ocultos" class="hora-chips" style="display:none;margin-top:4px"></div>
       {% if hora_com_lucro %}
       <div class="hora-custo-preview">
         Hora de atendimento: <strong>{{ hora_com_lucro | brl }}/h</strong>
@@ -74,18 +64,19 @@
     </div>
 
     <div class="campo">
-      <label>Cenários de preço de venda</label>
+      <label>Preços que você quer cobrar</label>
+      <small class="hint" style="display:block;margin-bottom:10px">Insira até 3 valores diferentes para comparar o lucro e a margem de cada opção</small>
       <div class="grid-3">
         <div class="campo">
-          <label style="font-size:12px;color:var(--muted)">Cenário 1 (R$)</label>
+          <label style="font-size:12px;color:var(--muted)">Opção 1 (R$)</label>
           <input type="number" step="0.01" name="preco1" id="prot_p1" placeholder="0,00">
         </div>
         <div class="campo">
-          <label style="font-size:12px;color:var(--muted)">Cenário 2 (R$)</label>
+          <label style="font-size:12px;color:var(--muted)">Opção 2 (R$)</label>
           <input type="number" step="0.01" name="preco2" id="prot_p2" placeholder="0,00">
         </div>
         <div class="campo">
-          <label style="font-size:12px;color:var(--muted)">Cenário 3 (R$)</label>
+          <label style="font-size:12px;color:var(--muted)">Opção 3 (R$)</label>
           <input type="number" step="0.01" name="preco3" id="prot_p3" placeholder="0,00">
         </div>
       </div>
@@ -107,12 +98,19 @@
     <strong style="font-size:16px">{{ p.nome }}</strong>
     <div style="display:flex;gap:8px">
       <button class="btn-icon btn-icon-editar"
-        onclick="editarProtocolo({{ p.id }}, '{{ p.nome|replace("'","\\'")|e }}', {{ p.horas_clinica or 0 }}, {{ p.preco1 or 0 }}, {{ p.preco2 or 0 }}, {{ p.preco3 or 0 }}, {{ pd.itens | tojson }})">
+        data-pid="{{ p.id }}"
+        data-nome="{{ p.nome }}"
+        data-horas="{{ p.horas_clinica or 0 }}"
+        data-p1="{{ p.preco1 or 0 }}"
+        data-p2="{{ p.preco2 or 0 }}"
+        data-p3="{{ p.preco3 or 0 }}"
+        data-itens='{{ pd.itens | tojson }}'
+        onclick="editarProtocolo(this)">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
         Editar
       </button>
       <a href="{{ url_for('protocolo_excluir', id=p.id) }}"
-         onclick="return confirm('Excluir {{ p.nome }}?')"
+         onclick="return confirm('Excluir {{ p.nome|replace("'", "\\'") }}?')"
          class="btn-icon btn-icon-excluir">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
         Excluir
@@ -150,15 +148,17 @@
 
   {% if p.preco1 or p.preco2 or p.preco3 %}
   <div class="cenarios">
-    {% for preco, label in [(p.preco1,'Cenário 1'),(p.preco2,'Cenário 2'),(p.preco3,'Cenário 3')] %}
+    {% for preco, label in [(p.preco1,'Opção 1'),(p.preco2,'Opção 2'),(p.preco3,'Opção 3')] %}
     {% if preco %}
     {% set lucro = preco - pd.custo_total %}
     {% set margem = (lucro / preco * 100) if preco > 0 else 0 %}
-    <div class="cenario {% if lucro < 0 %}cenario-negativo{% endif %}">
-      <div class="cenario-label">{{ label }}</div>
+    {% set farol = 'vermelho' if lucro < 0 else ('amarelo' if margem < 20 else 'verde') %}
+    <div class="cenario cenario-{{ farol }}">
+      <div class="cenario-farol farol-{{ farol }}"></div>
+      <div class="cenario-nome">{{ label }}</div>
       <div class="cenario-preco">{{ preco | brl }}</div>
-      <div>Lucro: {{ lucro | brl }}</div>
-      <div>Margem: {{ "%.1f"|format(margem) }}%</div>
+      <div class="cenario-lucro {% if lucro < 0 %}neg{% endif %}">Lucro: {{ lucro | brl }}</div>
+      <div style="font-size:12px;color:var(--muted)">Margem: {{ "%.1f"|format(margem) }}%</div>
     </div>
     {% endif %}
     {% endfor %}
@@ -169,7 +169,7 @@
 </div>
 {% else %}
 <div class="secao" style="text-align:center;color:var(--muted);padding:48px">
-  Nenhum protocolo cadastrado. Clique em <strong>Novo Protocolo</strong> para começar.
+  Nenhuma ficha técnica cadastrada. Clique em <strong>Nova Ficha Técnica</strong> para começar.
 </div>
 {% endif %}
 
@@ -181,77 +181,102 @@ const insumos = [
 ];
 const horaValor = {{ hora_com_lucro }};
 
+// ── Gerar chips de tempo (10 em 10 min até 10h) ──────────────────────────────
+(function buildChips() {
+  const visiveis = document.getElementById('chips-visiveis');
+  const ocultos  = document.getElementById('chips-ocultos');
+  const chips = [{min: 0, label: 'Não incluir'}];
+  for (let m = 10; m <= 600; m += 10) {
+    const h = Math.floor(m / 60), r = m % 60;
+    const label = m < 60 ? m + ' min' : (r === 0 ? h + 'h' : h + 'h' + String(r).padStart(2, '0'));
+    chips.push({min: m, label});
+  }
+  chips.forEach((c, i) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'hora-chip-pill';
+    btn.dataset.min = c.min;
+    btn.textContent = c.label;
+    btn.addEventListener('click', () => selecionarChip(c.min));
+    (i < 13 ? visiveis : ocultos).appendChild(btn);
+  });
+})();
+
+function selecionarChip(min) {
+  document.getElementById('prot_horas').value = min === 0 ? 0 : +(min / 60).toFixed(6);
+  document.querySelectorAll('.hora-chip-pill').forEach(b =>
+    b.classList.toggle('ativo', +b.dataset.min === min));
+}
+
+function resetarChips(horas) {
+  const min = Math.round(horas * 6) * 10;
+  document.getElementById('prot_horas').value = horas;
+  document.querySelectorAll('.hora-chip-pill').forEach(b =>
+    b.classList.toggle('ativo', +b.dataset.min === min));
+}
+
+function expandirChips() {
+  const oc  = document.getElementById('chips-ocultos');
+  const btn = document.getElementById('btn-mais-chips');
+  const aberto = oc.style.display !== 'none';
+  oc.style.display = aberto ? 'none' : 'flex';
+  btn.textContent  = aberto ? '+ Ver mais horários' : '− Menos horários';
+}
+
+// ── Form ─────────────────────────────────────────────────────────────────────
 function toggleFormNovo() {
   const f = document.getElementById('form-novo');
-  const visivel = f.style.display !== 'none';
-  if (visivel) {
-    cancelarForm();
-  } else {
-    document.getElementById('form-titulo').textContent = 'Nova Ficha Técnica';
-    document.getElementById('prot_id').value = '';
-    document.getElementById('prot_nome').value = '';
-    document.getElementById('prot_p1').value = '';
-    document.getElementById('prot_p2').value = '';
-    document.getElementById('prot_p3').value = '';
-    document.getElementById('itens-form').innerHTML = '';
-    resetarChips(0);
-    f.style.display = 'block';
-    f.scrollIntoView({behavior:'smooth', block:'start'});
-  }
+  if (f.style.display !== 'none') { cancelarForm(); return; }
+  document.getElementById('form-titulo').textContent = 'Nova Ficha Técnica';
+  document.getElementById('prot_id').value  = '';
+  document.getElementById('prot_nome').value = '';
+  document.getElementById('prot_p1').value  = '';
+  document.getElementById('prot_p2').value  = '';
+  document.getElementById('prot_p3').value  = '';
+  document.getElementById('itens-form').innerHTML = '';
+  resetarChips(0);
+  f.style.display = 'block';
+  f.scrollIntoView({behavior: 'smooth', block: 'start'});
 }
 
 function cancelarForm() {
   document.getElementById('form-novo').style.display = 'none';
 }
 
-function editarProtocolo(id, nome, horas, p1, p2, p3, itens) {
+function editarProtocolo(btn) {
+  const id    = btn.dataset.pid;
+  const nome  = btn.dataset.nome;
+  const horas = parseFloat(btn.dataset.horas) || 0;
+  const p1    = parseFloat(btn.dataset.p1) || '';
+  const p2    = parseFloat(btn.dataset.p2) || '';
+  const p3    = parseFloat(btn.dataset.p3) || '';
+  const itens = JSON.parse(btn.dataset.itens || '[]');
+
   document.getElementById('form-titulo').textContent = 'Editando: ' + nome;
-  document.getElementById('prot_id').value = id;
+  document.getElementById('prot_id').value   = id;
   document.getElementById('prot_nome').value = nome;
-  document.getElementById('prot_p1').value = p1 || '';
-  document.getElementById('prot_p2').value = p2 || '';
-  document.getElementById('prot_p3').value = p3 || '';
+  document.getElementById('prot_p1').value   = p1;
+  document.getElementById('prot_p2').value   = p2;
+  document.getElementById('prot_p3').value   = p3;
+
   const itensDiv = document.getElementById('itens-form');
   itensDiv.innerHTML = '';
-  (itens || []).forEach(item => {
+  itens.forEach(item => {
     let opts = '<option value="">Selecione o insumo</option>';
-    insumos.forEach(i => opts += `<option value="${i.id}" data-custo="${i.custo}" data-un="${i.unidade}" ${String(i.id) === String(item.insumo_id) ? 'selected' : ''}>${i.nome} (${i.unidade})</option>`);
+    insumos.forEach(i => opts += `<option value="${i.id}" data-custo="${i.custo}" data-un="${i.unidade}"${String(i.id) === String(item.insumo_id) ? ' selected' : ''}>${i.nome} (${i.unidade})</option>`);
     const div = document.createElement('div');
     div.className = 'linha-insumo';
     div.innerHTML = `<select name="insumo_id" onchange="atualizarCusto(this)">${opts}</select>
       <input type="number" step="0.001" name="quantidade" placeholder="Qtd" min="0" value="${item.quantidade}" oninput="atualizarCusto(this.closest('.linha-insumo').querySelector('select'))">
-      <span class="custo-item">R$ ${(item.custo).toFixed(2).replace('.',',')}</span>
+      <span class="custo-item">R$ ${(item.custo).toFixed(2).replace('.', ',')}</span>
       <button type="button" onclick="this.parentElement.remove()">✕</button>`;
     itensDiv.appendChild(div);
   });
+
   resetarChips(horas);
-  const f = document.getElementById('form-novo');
-  f.style.display = 'block';
+  document.getElementById('form-novo').style.display = 'block';
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
-
-function resetarChips(horasSelecionadas) {
-  document.querySelectorAll('.hora-chip-pill').forEach(label => {
-    const input = label.querySelector('input');
-    const span  = label.querySelector('span');
-    const val   = parseFloat(input.value);
-    if (val === horasSelecionadas) {
-      input.checked = true;
-      span.classList.add('ativo');
-    } else {
-      input.checked = false;
-      span.classList.remove('ativo');
-    }
-  });
-}
-
-document.querySelectorAll('.hora-chip-pill').forEach(label => {
-  label.addEventListener('click', () => {
-    document.querySelectorAll('.hora-chip-pill span').forEach(s => s.classList.remove('ativo'));
-    label.querySelector('span').classList.add('ativo');
-  });
-});
-resetarChips(0);
 
 function adicionarItem() {
   let opts = '<option value="">Selecione o insumo</option>';
@@ -272,5 +297,7 @@ function atualizarCusto(sel) {
   const qtd   = parseFloat(linha.querySelector('input').value || 0);
   linha.querySelector('.custo-item').textContent = 'R$ ' + (custo * qtd).toFixed(2).replace('.', ',');
 }
+
+resetarChips(0);
 </script>
 {% endblock %}

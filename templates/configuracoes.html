@@ -5,12 +5,12 @@
 <form method="POST" enctype="multipart/form-data">
   <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
 
-  <!-- Dados gerais -->
+  <!-- Dados do Negócio -->
   <div class="secao">
-    <h3>Dados da Clínica</h3>
+    <h3>Dados do Negócio</h3>
     <div class="grid-2">
       <div class="campo">
-        <label>Nome da clínica / profissional</label>
+        <label>Nome da empresa / profissional</label>
         <input type="text" name="nome_clinica" value="{{ config.nome_clinica or '' }}" placeholder="Ex: Dra. Ana Carvalho">
       </div>
       <div class="campo">
@@ -24,12 +24,18 @@
         </select>
       </div>
       <div class="campo">
+        <label>Percentual de impostos (%)</label>
+        <input type="number" step="0.1" name="imposto_pct" value="{{ config.imposto_pct or 0 }}" placeholder="Ex: 6.0">
+        <small class="hint">Confirme com seu contador. Ex: MEI isento, Simples Nacional ≈ 6%</small>
+      </div>
+      <div class="campo">
         <label title="O quanto você quer/precisa receber mensal">Pró-labore (R$) — Retirada mensal</label>
         <input type="number" step="0.01" name="pro_labore" value="{{ config.pro_labore or 0 }}">
       </div>
       <div class="campo">
         <label>Horas de atendimento por mês</label>
         <input type="number" step="0.5" name="horas_mes" value="{{ config.horas_mes or 160 }}">
+        <small class="hint">Dias trabalhados × horas por dia. Ex: 22 dias × 8h = 176 horas/mês</small>
       </div>
       <div class="campo">
         <label>Margem de lucro desejada (%)</label>
@@ -58,7 +64,7 @@
       <div class="linha-custo">
         <input type="text" name="fixo_nome" value="{{ c.nome }}" placeholder="Descrição">
         <div class="custo-valor-wrap"><span class="prefix">R$</span>
-          <input type="number" step="0.01" name="fixo_valor" value="{{ c.valor }}" placeholder="0,00"></div>
+          <input type="number" step="0.01" name="fixo_valor" value="{{ '%.2f'|format(c.valor) }}" placeholder="0,00"></div>
         <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
       </div>
       {% endfor %}
@@ -83,10 +89,11 @@
     </div>
     <div class="lista-custos" id="variaveis">
       {% for c in variaveis %}
-      <div class="linha-custo">
+      <div class="linha-custo linha-custo-var">
         <input type="text" name="var_nome" value="{{ c.nome }}" placeholder="Descrição">
+        <input type="text" name="var_fornecedor" value="{{ c.fornecedor }}" placeholder="Fornecedor (opcional)" class="input-fornecedor">
         <div class="custo-valor-wrap"><span class="prefix">R$</span>
-          <input type="number" step="0.01" name="var_valor" value="{{ c.valor }}" placeholder="0,00"></div>
+          <input type="number" step="0.01" name="var_valor" value="{{ '%.2f'|format(c.valor) }}" placeholder="0,00"></div>
         <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
       </div>
       {% endfor %}
@@ -94,12 +101,46 @@
     <button type="button" class="btn-add" onclick="addCusto('variaveis')">+ Adicionar custo variável</button>
   </div>
 
+  <!-- Taxas de Cartão -->
+  <div class="secao">
+    <div class="secao-header">
+      <div>
+        <h3>Taxas de Cartão</h3>
+        <p class="secao-desc">Taxa cobrada pela maquininha por bandeira e número de parcelas.</p>
+      </div>
+    </div>
+    <div class="sugestoes">
+      <span class="sugestao-label">Bandeiras:</span>
+      {% for b in ["Visa/Master","Amex","Elo","Hipercard","PIX","Link de pagamento"] %}
+      <button type="button" class="chip" onclick="addCartao('{{ b }}')">+ {{ b }}</button>
+      {% endfor %}
+    </div>
+    <div class="lista-custos" id="cartoes">
+      {% for c in cartoes %}
+      <div class="linha-cartao">
+        <input type="text" name="cartao_bandeira" value="{{ c.bandeira }}" placeholder="Bandeira">
+        <div class="cartao-parc-wrap">
+          <input type="number" min="1" max="12" name="cartao_parcelas" value="{{ c.parcelas or 1 }}" placeholder="1">
+          <span class="prefix">x</span>
+        </div>
+        <div class="custo-valor-wrap cartao-taxa-wrap">
+          <span class="prefix">Taxa</span>
+          <input type="number" step="0.01" name="cartao_taxa" value="{{ '%.2f'|format(c.taxa) }}" placeholder="0,00">
+          <span class="prefix">%</span>
+        </div>
+        <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
+      </div>
+      {% endfor %}
+    </div>
+    <button type="button" class="btn-add" onclick="addCartao()">+ Adicionar taxa</button>
+  </div>
+
   <button type="submit" class="btn-primario">Salvar configurações</button>
 </form>
 
 {% if hora_clinica %}
 <div class="secao resultado-hora" style="margin-top:24px">
-  <h3>Sua hora clínica calculada</h3>
+  <h3>Sua hora de atendimento calculada</h3>
   <div class="resultado-grid">
     <div class="resultado-item">
       <div class="resultado-label">Total de custos mensais</div>
@@ -114,13 +155,13 @@
       <div class="resultado-valor">{{ hora_com_lucro | brl }}</div>
     </div>
   </div>
-  <p class="nota-hora">Este valor é aplicado automaticamente nos protocolos conforme o tempo de atendimento.</p>
+  <p class="nota-hora">Este valor é aplicado automaticamente nas fichas técnicas conforme o tempo de atendimento.</p>
 </div>
 {% endif %}
 
-<!-- Logo da Clínica — sempre no final -->
+<!-- Logo do Negócio -->
 <div class="secao" style="margin-top:24px">
-  <h3>Logo da Clínica</h3>
+  <h3>Logo do Negócio</h3>
   <form method="POST" enctype="multipart/form-data">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     {% if tenant.logo_base64 %}
@@ -147,15 +188,41 @@
 function addCusto(lista, nome) {
   const isFixo = lista === 'fixos';
   const div = document.createElement('div');
-  div.className = 'linha-custo';
-  div.innerHTML =
-    '<input type="text" name="' + (isFixo?'fixo_nome':'var_nome') + '" value="' + (nome||'') + '" placeholder="Descrição">' +
-    '<div class="custo-valor-wrap"><span class="prefix">R$</span>' +
-    '<input type="number" step="0.01" name="' + (isFixo?'fixo_valor':'var_valor') + '" placeholder="0,00"></div>' +
-    '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';
+  div.className = isFixo ? 'linha-custo' : 'linha-custo linha-custo-var';
+  if (isFixo) {
+    div.innerHTML =
+      '<input type="text" name="fixo_nome" value="' + (nome||'') + '" placeholder="Descrição">' +
+      '<div class="custo-valor-wrap"><span class="prefix">R$</span>' +
+      '<input type="number" step="0.01" name="fixo_valor" placeholder="0,00"></div>' +
+      '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';
+  } else {
+    div.innerHTML =
+      '<input type="text" name="var_nome" value="' + (nome||'') + '" placeholder="Descrição">' +
+      '<input type="text" name="var_fornecedor" placeholder="Fornecedor (opcional)" class="input-fornecedor">' +
+      '<div class="custo-valor-wrap"><span class="prefix">R$</span>' +
+      '<input type="number" step="0.01" name="var_valor" placeholder="0,00"></div>' +
+      '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';
+  }
   document.getElementById(lista).appendChild(div);
-  div.querySelector('input[type=number]').focus();
+  if (nome) {
+    div.querySelector('input[type=number]').focus();
+  } else {
+    div.querySelector('input[type=text]').focus();
+  }
 }
+
+function addCartao(bandeira) {
+  const div = document.createElement('div');
+  div.className = 'linha-cartao';
+  div.innerHTML =
+    '<input type="text" name="cartao_bandeira" value="' + (bandeira||'') + '" placeholder="Bandeira">' +
+    '<div class="cartao-parc-wrap"><input type="number" min="1" max="12" name="cartao_parcelas" value="1" placeholder="1"><span class="prefix">x</span></div>' +
+    '<div class="custo-valor-wrap cartao-taxa-wrap"><span class="prefix">Taxa</span><input type="number" step="0.01" name="cartao_taxa" placeholder="0,00"><span class="prefix">%</span></div>' +
+    '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';
+  document.getElementById('cartoes').appendChild(div);
+  div.querySelector('input[name="cartao_taxa"]').focus();
+}
+
 function previewLogo(input) {
   const file = input.files[0];
   if (!file) return;

@@ -6,10 +6,16 @@
   <form method="POST" action="{{ url_for('insumo_salvar') }}">
     <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="id" id="insumo_id">
+    <div class="sugestoes" style="margin-bottom:12px">
+      <span class="sugestao-label">Recomendações:</span>
+      {% for s in ["LUVA DESCARTAVEL","MASCARA DESCARTAVEL","TOUCA DESCARTAVEL","SERINGA","AGULHA","BISTURI","GAZE ESTERIL","ESPATULA","MICROPORE","ALGODAO","SORO FISIOLOGICO","ACIDO HIALURONICO","TOXINA BOTULINICA","ACIDO MANDELICO","ACIDO RETINOICO","PROTETOR SOLAR"] %}
+      <button type="button" class="chip" onclick="sugerirInsumo('{{ s }}')">{{ s }}</button>
+      {% endfor %}
+    </div>
     <div class="grid-2">
       <div class="campo">
         <label>Nome do insumo</label>
-        <input type="text" name="nome" id="insumo_nome" placeholder="Ex: Luva descartável" required>
+        <input type="text" name="nome" id="insumo_nome" placeholder="Ex: LUVA DESCARTAVEL" required>
       </div>
       <div class="campo">
         <label>Unidade</label>
@@ -81,6 +87,10 @@
 {% endif %}
 
 <script>
+function sugerirInsumo(nome) {
+  document.getElementById('insumo_nome').value = nome;
+  document.getElementById('insumo_nome').focus();
+}
 function editar(id, nome, unidade, qtd, custo) {
   document.getElementById('insumo_id').value = id;
   document.getElementById('insumo_nome').value = nome;
