@@ -272,7 +272,8 @@ def registro():
             flash("Este e-mail já está cadastrado.", "error")
             return render_template("registro.html")
 
-        tenant = Tenant(nome_negocio=nome, status="ativo")
+        tenant = Tenant(nome_negocio=nome, status="trial",
+                        data_expiracao=datetime.utcnow() + timedelta(days=365))
         db.session.add(tenant)
         db.session.flush()
 
@@ -454,6 +455,19 @@ def desativar_tenant(tid):
         t.status = "inativo"
         db.session.commit()
         flash(f"{t.nome_negocio} desativado.", "warning")
+    return redirect(url_for("painel_a01"))
+
+@app.route("/painel-a01/renovar/<int:tid>", methods=["POST"])
+@login_required
+@super_admin_required
+def renovar_tenant(tid):
+    t = db.session.get(Tenant, tid)
+    if t:
+        base = max(t.data_expiracao, datetime.utcnow()) if t.data_expiracao else datetime.utcnow()
+        t.data_expiracao = base + timedelta(days=365)
+        t.status = "trial"
+        db.session.commit()
+        flash(f"{t.nome_negocio} renovado por 12 meses.", "success")
     return redirect(url_for("painel_a01"))
 
 @app.route("/painel-a01/excluir/<int:tid>", methods=["POST"])

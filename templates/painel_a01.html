@@ -4,8 +4,8 @@
 
 <div class="painel-stats">
   <div class="pstat"><div class="pstat-num">{{ total_ativos }}</div><div class="pstat-label">Ativos</div></div>
-  <div class="pstat"><div class="pstat-num">{{ total_trial }}</div><div class="pstat-label">Em teste</div></div>
-  <div class="pstat"><div class="pstat-num">{{ total_expirados }}</div><div class="pstat-label">Expirados</div></div>
+  <div class="pstat"><div class="pstat-num">{{ total_trial }}</div><div class="pstat-label">Ativos (12 meses)</div></div>
+  <div class="pstat"><div class="pstat-num">{{ total_expirados }}</div><div class="pstat-label">Expirados / Inativos</div></div>
 </div>
 
 {% if data %}
@@ -16,7 +16,7 @@
         <tr>
           <th>Cliente</th>
           <th>E-mail</th>
-          <th>Status</th>
+          <th>Status / Validade</th>
           <th>Cadastro</th>
           <th>Último acesso</th>
           <th>Ações</th>
@@ -29,9 +29,16 @@
           <td style="font-size:13px">{{ d.email_admin }}</td>
           <td>
             {% if t.status == 'ativo' %}
-              <span class="badge-status badge-ativo">Ativo</span>
+              <span class="badge-status badge-ativo">Ativo (permanente)</span>
+            {% elif t.status == 'trial' and t.esta_ativo() %}
+              <span class="badge-status badge-trial">Ativo · expira {{ t.data_expiracao.strftime('%d/%m/%Y') }}</span>
+              {% if d.dias_restantes is not none and d.dias_restantes <= 30 %}
+              <div style="font-size:11px;color:var(--warn);margin-top:3px">⚠ {{ d.dias_restantes }} dias restantes</div>
+              {% endif %}
+            {% elif t.status == 'trial' %}
+              <span class="badge-status badge-inativo">Expirado em {{ t.data_expiracao.strftime('%d/%m/%Y') if t.data_expiracao else '—' }}</span>
             {% else %}
-              <span class="badge-status badge-inativo">Aguardando</span>
+              <span class="badge-status badge-inativo">Desativado</span>
             {% endif %}
           </td>
           <td style="font-size:13px;color:var(--muted)">{{ t.data_cadastro.strftime('%d/%m/%Y') }}</td>
@@ -44,10 +51,14 @@
           </td>
           <td>
             <div style="display:flex;gap:6px;flex-wrap:wrap">
+              <form method="POST" action="{{ url_for('renovar_tenant', tid=t.id) }}" style="margin:0">
+                <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-secundario" style="font-size:12px;padding:5px 12px">↻ +12 meses</button>
+              </form>
               {% if t.status != 'ativo' %}
               <form method="POST" action="{{ url_for('ativar_tenant', tid=t.id) }}" style="margin:0">
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
-                <button type="submit" class="btn-secundario" style="font-size:12px;padding:5px 12px">✓ Ativar</button>
+                <button type="submit" class="btn-secundario" style="font-size:12px;padding:5px 12px">✓ Ativar permanente</button>
               </form>
               {% endif %}
               {% if t.status != 'inativo' %}

@@ -3,17 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Acesso expirado — Precificação Clínica</title>
+<title>Acesso encerrado — Precificação</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
 <div class="expirado-page">
   <div class="expirado-card">
     <div class="expirado-icon">⏳</div>
-    <h1 style="margin-bottom:12px">Conta aguardando ativação</h1>
-    <p style="color:var(--muted);margin-bottom:8px">Sua conta ainda não foi ativada. Entre em contato com a A'01 Negócios — após a confirmação, seu acesso é liberado na hora.</p>
+    <h1 style="margin-bottom:12px">Seu acesso está encerrado</h1>
+    <p style="color:var(--muted);margin-bottom:8px">O período de 12 meses expirou ou sua conta foi desativada. Entre em contato com a A'01 Negócios para renovar — seu acesso é reativado na hora.</p>
     <a href="https://wa.me/5500000000000" target="_blank" class="btn-primario full" style="margin-top:24px;justify-content:center">
-      Falar com a A'01 Negócios →
+      Renovar meu acesso →
     </a>
     <div class="auth-link" style="margin-top:16px">
       <a href="{{ url_for('login') }}">← Voltar ao login</a>
