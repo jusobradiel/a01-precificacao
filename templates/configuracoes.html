@@ -111,51 +111,30 @@
         <p class="secao-desc">Taxa cobrada por forma de pagamento. Afeta diretamente o lucro real dos cenários.</p>
       </div>
     </div>
-    <!-- PIX e Dinheiro (fixos) -->
-    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
-      <div class="linha-taxa-fixa">
-        <span class="taxa-fixa-nome">PIX</span>
+    <div class="sugestoes">
+      <span class="sugestao-label">Formas de pagamento:</span>
+      {% for b in ["PIX","Dinheiro","Visa/Master","Amex","Elo","Hipercard","Link de pagamento"] %}
+      <button type="button" class="chip" onclick="addCartao('{{ b }}')">+ {{ b }}</button>
+      {% endfor %}
+    </div>
+    <div class="lista-custos" id="cartoes">
+      {% for c in cartoes %}
+      <div class="linha-cartao">
+        <input type="text" name="cartao_bandeira" value="{{ c.bandeira }}" placeholder="Forma de pagamento">
+        <div class="cartao-parc-wrap">
+          <input type="number" min="1" max="12" name="cartao_parcelas" value="{{ c.parcelas or 1 }}" placeholder="1">
+          <span class="prefix">x</span>
+        </div>
         <div class="custo-valor-wrap cartao-taxa-wrap">
           <span class="prefix">Taxa</span>
-          <input type="number" step="0.01" name="pix_taxa" value="{{ config.pix_taxa or 0 }}" placeholder="0,00">
+          <input type="number" step="0.01" name="cartao_taxa" value="{{ '%.2f'|format(c.taxa) }}" placeholder="0,00">
           <span class="prefix">%</span>
         </div>
+        <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
       </div>
-      <div class="linha-taxa-fixa">
-        <span class="taxa-fixa-nome">Dinheiro / Espécie</span>
-        <div class="custo-valor-wrap cartao-taxa-wrap">
-          <span class="prefix">Taxa</span>
-          <input type="number" step="0.01" name="dinheiro_taxa" value="{{ config.dinheiro_taxa or 0 }}" placeholder="0,00">
-          <span class="prefix">%</span>
-        </div>
-      </div>
+      {% endfor %}
     </div>
-    <div style="border-top:1px solid var(--border);padding-top:14px;margin-bottom:10px">
-      <div class="sugestoes">
-        <span class="sugestao-label">Cartão — bandeiras:</span>
-        {% for b in ["Visa/Master","Amex","Elo","Hipercard","Link de pagamento"] %}
-        <button type="button" class="chip" onclick="addCartao('{{ b }}')">+ {{ b }}</button>
-        {% endfor %}
-      </div>
-      <div class="lista-custos" id="cartoes">
-        {% for c in cartoes %}
-        <div class="linha-cartao">
-          <input type="text" name="cartao_bandeira" value="{{ c.bandeira }}" placeholder="Bandeira">
-          <div class="cartao-parc-wrap">
-            <input type="number" min="1" max="12" name="cartao_parcelas" value="{{ c.parcelas or 1 }}" placeholder="1">
-            <span class="prefix">x</span>
-          </div>
-          <div class="custo-valor-wrap cartao-taxa-wrap">
-            <span class="prefix">Taxa</span>
-            <input type="number" step="0.01" name="cartao_taxa" value="{{ '%.2f'|format(c.taxa) }}" placeholder="0,00">
-            <span class="prefix">%</span>
-          </div>
-          <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
-        </div>
-        {% endfor %}
-      </div>
-      <button type="button" class="btn-add" onclick="addCartao()">+ Adicionar bandeira de cartão</button>
-    </div>
+    <button type="button" class="btn-add" onclick="addCartao()">+ Adicionar forma de pagamento</button>
   </div>
 
   <button type="submit" class="btn-primario">Salvar configurações</button>
@@ -239,7 +218,7 @@ function addCartao(bandeira) {
   const div = document.createElement('div');
   div.className = 'linha-cartao';
   div.innerHTML =
-    '<input type="text" name="cartao_bandeira" value="' + (bandeira||'') + '" placeholder="Bandeira">' +
+    '<input type="text" name="cartao_bandeira" value="' + (bandeira||'') + '" placeholder="Forma de pagamento">' +
     '<div class="cartao-parc-wrap"><input type="number" min="1" max="12" name="cartao_parcelas" value="1" placeholder="1"><span class="prefix">x</span></div>' +
     '<div class="custo-valor-wrap cartao-taxa-wrap"><span class="prefix">Taxa</span><input type="number" step="0.01" name="cartao_taxa" placeholder="0,00"><span class="prefix">%</span></div>' +
     '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';

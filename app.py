@@ -658,10 +658,9 @@ def protocolos():
 
     formas_pagamento = {}
     if config:
-        formas_pagamento["PIX"] = config.pix_taxa or 0
-        formas_pagamento["Dinheiro"] = config.dinheiro_taxa or 0
         for c in json.loads(config.cartoes_json or "[]"):
-            key = f"{c['bandeira']} {c['parcelas']}x"
+            parc = int(c.get("parcelas", 1) or 1)
+            key  = c["bandeira"] if parc <= 1 else f"{c['bandeira']} {parc}x"
             formas_pagamento[key] = c["taxa"]
 
     return render_template("protocolos.html",
