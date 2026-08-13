@@ -98,6 +98,8 @@ class Configuracao(db.Model):
     custos_variaveis_json = db.Column(db.Text, default="[]")
     imposto_pct           = db.Column(db.Float, default=0)
     cartoes_json          = db.Column(db.Text, default="[]")
+    pix_taxa              = db.Column(db.Float, default=0)
+    dinheiro_taxa         = db.Column(db.Float, default=0)
 
 class Insumo(db.Model):
     __tablename__   = "insumo"
@@ -124,6 +126,9 @@ class Protocolo(db.Model):
     preco1        = db.Column(db.Float, default=0)
     preco2        = db.Column(db.Float, default=0)
     preco3        = db.Column(db.Float, default=0)
+    pagamento1    = db.Column(db.String(100))
+    pagamento2    = db.Column(db.String(100))
+    pagamento3    = db.Column(db.String(100))
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -535,7 +540,9 @@ def configuracoes():
             [{"nome": n, "valor": float(v or 0), "fornecedor": f}
              for n, v, f in zip(nomes_v, valores_v, fornecedores_v) if n.strip()])
 
-        config.imposto_pct = float(request.form.get("imposto_pct", 0) or 0)
+        config.imposto_pct    = float(request.form.get("imposto_pct", 0) or 0)
+        config.pix_taxa      = float(request.form.get("pix_taxa", 0) or 0)
+        config.dinheiro_taxa = float(request.form.get("dinheiro_taxa", 0) or 0)
 
         bandeiras_c = request.form.getlist("cartao_bandeira")
         parcelas_c  = request.form.getlist("cartao_parcelas")
@@ -649,12 +656,21 @@ def protocolos():
                 if mais_lucrativo is None or lucro > mais_lucrativo["lucro"]:
                     mais_lucrativo = {"nome": p.nome, "lucro": lucro, "preco": preco}
 
+    formas_pagamento = {}
+    if config:
+        formas_pagamento["PIX"] = config.pix_taxa or 0
+        formas_pagamento["Dinheiro"] = config.dinheiro_taxa or 0
+        for c in json.loads(config.cartoes_json or "[]"):
+            key = f"{c['bandeira']} {c['parcelas']}x"
+            formas_pagamento[key] = c["taxa"]
+
     return render_template("protocolos.html",
                            protocolos_dados=protocolos_dados,
                            insumos=insumos,
                            hora_com_lucro=hora_com_lucro,
                            melhor_margem=melhor_margem,
-                           mais_lucrativo=mais_lucrativo)
+                           mais_lucrativo=mais_lucrativo,
+                           formas_pagamento=formas_pagamento)
 
 @app.route("/protocolos/salvar", methods=["POST"])
 @login_required
@@ -667,6 +683,9 @@ def protocolo_salvar():
     p1    = float(request.form.get("preco1", 0) or 0)
     p2    = float(request.form.get("preco2", 0) or 0)
     p3    = float(request.form.get("preco3", 0) or 0)
+    pg1   = request.form.get("pagamento1", "") or ""
+    pg2   = request.form.get("pagamento2", "") or ""
+    pg3   = request.form.get("pagamento3", "") or ""
 
     insumo_ids  = request.form.getlist("insumo_id")
     quantidades = request.form.getlist("quantidade")
@@ -685,10 +704,12 @@ def protocolo_salvar():
         if p and p.tenant_id == tid:
             p.nome = nome; p.horas_clinica = horas
             p.preco1 = p1; p.preco2 = p2; p.preco3 = p3
+            p.pagamento1 = pg1; p.pagamento2 = pg2; p.pagamento3 = pg3
             p.itens_json = json.dumps(itens)
     else:
         db.session.add(Protocolo(tenant_id=tid, nome=nome, horas_clinica=horas,
                                  preco1=p1, preco2=p2, preco3=p3,
+                                 pagamento1=pg1, pagamento2=pg2, pagamento3=pg3,
                                  itens_json=json.dumps(itens)))
     db.session.commit()
     return redirect(url_for("protocolos"))
@@ -748,6 +769,19 @@ def init_db():
             db.session.commit()
         except Exception:
             db.session.rollback()
+        for col_sql in [
+            "ALTER TABLE configuracao ADD COLUMN {if} pix_taxa FLOAT DEFAULT 0",
+            "ALTER TABLE configuracao ADD COLUMN {if} dinheiro_taxa FLOAT DEFAULT 0",
+            "ALTER TABLE protocolo ADD COLUMN {if} pagamento1 VARCHAR(100)",
+            "ALTER TABLE protocolo ADD COLUMN {if} pagamento2 VARCHAR(100)",
+            "ALTER TABLE protocolo ADD COLUMN {if} pagamento3 VARCHAR(100)",
+        ]:
+            try:
+                sql = col_sql.replace("{if}", "IF NOT EXISTS" if db_url.startswith("postgresql") else "")
+                db.session.execute(db.text(sql))
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
         if not Usuario.query.filter_by(is_super_admin=True).first():
             sa = Usuario(
                 email=os.environ.get("SUPER_ADMIN_EMAIL", "admin@a01.com.br"),

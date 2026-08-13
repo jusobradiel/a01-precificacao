@@ -44,7 +44,7 @@
       <label>Tempo de atendimento</label>
       <input type="hidden" name="horas_clinica" id="prot_horas" value="0">
       <div id="chips-visiveis" class="hora-chips"></div>
-      <button type="button" class="chip chip-expandir" id="btn-mais-chips" onclick="expandirChips()">+ Ver mais horários</button>
+      <button type="button" class="chip-expandir" id="btn-mais-chips" onclick="expandirChips()">+ Ver mais horários</button>
       <div id="chips-ocultos" class="hora-chips" style="display:none;margin-top:4px"></div>
       {% if hora_com_lucro %}
       <div class="hora-custo-preview">
@@ -63,26 +63,54 @@
       <button type="button" class="btn-add" onclick="adicionarItem()" style="margin-top:8px">+ Adicionar insumo</button>
     </div>
 
-    <div class="campo">
-      <label>Preços que você quer cobrar</label>
-      <small class="hint" style="display:block;margin-bottom:10px">Insira até 3 valores diferentes para comparar o lucro e a margem de cada opção</small>
-      <div class="grid-3">
-        <div class="campo">
-          <label style="font-size:12px;color:var(--muted)">Opção 1 (R$)</label>
-          <input type="number" step="0.01" name="preco1" id="prot_p1" placeholder="0,00">
-        </div>
-        <div class="campo">
-          <label style="font-size:12px;color:var(--muted)">Opção 2 (R$)</label>
-          <input type="number" step="0.01" name="preco2" id="prot_p2" placeholder="0,00">
-        </div>
-        <div class="campo">
-          <label style="font-size:12px;color:var(--muted)">Opção 3 (R$)</label>
-          <input type="number" step="0.01" name="preco3" id="prot_p3" placeholder="0,00">
-        </div>
-      </div>
+    <!-- Custo total dinâmico -->
+    <div class="custo-total-preview" id="custo-total-box" style="display:none">
+      <span class="custo-total-label">Custo total estimado:</span>
+      <strong id="custo-total-val">R$ 0,00</strong>
+      <span class="custo-total-hint">Use como referência para definir os cenários abaixo</span>
     </div>
 
-    <div style="display:flex;gap:10px">
+    <div class="campo" style="margin-top:16px">
+      <label>Cenários de preço</label>
+      <small class="hint" style="display:block;margin-bottom:12px">Defina até 3 preços e formas de pagamento para comparar lucro e margem de cada cenário</small>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        {% for num in [1, 2, 3] %}
+        <div class="cenario-input-row">
+          <div class="cenario-input-label">Cenário {{ num }}</div>
+          <div class="cenario-input-fields">
+            <div class="campo" style="flex:1;min-width:120px">
+              <label style="font-size:12px;color:var(--muted)">Preço cobrado (R$)</label>
+              <input type="number" step="0.01" name="preco{{ num }}" id="prot_p{{ num }}" placeholder="0,00" oninput="atualizarTotalForm()">
+            </div>
+            {% if formas_pagamento %}
+            <div class="campo" style="flex:2;min-width:160px">
+              <label style="font-size:12px;color:var(--muted)">Forma de pagamento</label>
+              <select name="pagamento{{ num }}" id="prot_pg{{ num }}" onchange="atualizarTotalForm()">
+                <option value="">— Selecione —</option>
+                {% for nome_fp, taxa_fp in formas_pagamento.items() %}
+                <option value="{{ nome_fp }}">{{ nome_fp }} ({{ "%.2f"|format(taxa_fp) }}%)</option>
+                {% endfor %}
+              </select>
+            </div>
+            {% else %}
+            <input type="hidden" name="pagamento{{ num }}" id="prot_pg{{ num }}" value="">
+            {% endif %}
+          </div>
+          <div class="cenario-preview-inline" id="cenario-preview-{{ num }}" style="display:none">
+            <span class="cp-lucro"></span>
+            <span class="cp-margem"></span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% if not formas_pagamento %}
+      <small class="hint" style="margin-top:8px">
+        <a href="{{ url_for('configuracoes') }}">Configure formas de pagamento</a> em Configurações para ver o impacto das taxas nos cenários.
+      </small>
+      {% endif %}
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:8px">
       <button type="submit" class="btn-primario">Salvar ficha técnica</button>
       <button type="button" class="btn-secundario" onclick="cancelarForm()">Cancelar</button>
     </div>
@@ -104,6 +132,9 @@
         data-p1="{{ p.preco1 or 0 }}"
         data-p2="{{ p.preco2 or 0 }}"
         data-p3="{{ p.preco3 or 0 }}"
+        data-pg1="{{ p.pagamento1 or '' }}"
+        data-pg2="{{ p.pagamento2 or '' }}"
+        data-pg3="{{ p.pagamento3 or '' }}"
         data-itens='{{ pd.itens | tojson }}'
         onclick="editarProtocolo(this)">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -146,19 +177,25 @@
   </table>
   {% endif %}
 
-  {% if p.preco1 or p.preco2 or p.preco3 %}
+  {% set cenarios_validos = [] %}
+  {% if p.preco1 %}{% set _ = cenarios_validos.append(1) %}{% endif %}
+  {% if p.preco2 %}{% set _ = cenarios_validos.append(2) %}{% endif %}
+  {% if p.preco3 %}{% set _ = cenarios_validos.append(3) %}{% endif %}
+
+  {% if cenarios_validos %}
   <div class="cenarios">
-    {% for preco, label in [(p.preco1,'Opção 1'),(p.preco2,'Opção 2'),(p.preco3,'Opção 3')] %}
+    {% for preco, label, pagto in [(p.preco1,'Cenário 1',p.pagamento1),(p.preco2,'Cenário 2',p.pagamento2),(p.preco3,'Cenário 3',p.pagamento3)] %}
     {% if preco %}
-    {% set lucro = preco - pd.custo_total %}
+    {% set taxa = formas_pagamento.get(pagto, 0) if pagto else 0 %}
+    {% set lucro = preco - pd.custo_total - (preco * taxa / 100) %}
     {% set margem = (lucro / preco * 100) if preco > 0 else 0 %}
-    {% set farol = 'vermelho' if lucro < 0 else ('amarelo' if margem < 20 else 'verde') %}
-    <div class="cenario cenario-{{ farol }}">
-      <div class="cenario-farol farol-{{ farol }}"></div>
+    <div class="cenario" data-margem="{{ margem }}">
+      <div class="cenario-farol"></div>
       <div class="cenario-nome">{{ label }}</div>
+      {% if pagto %}<div class="cenario-pagto">{{ pagto }}</div>{% endif %}
       <div class="cenario-preco">{{ preco | brl }}</div>
       <div class="cenario-lucro {% if lucro < 0 %}neg{% endif %}">Lucro: {{ lucro | brl }}</div>
-      <div style="font-size:12px;color:var(--muted)">Margem: {{ "%.1f"|format(margem) }}%</div>
+      <div class="cenario-margem">Margem: {{ "%.1f"|format(margem) }}%</div>
     </div>
     {% endif %}
     {% endfor %}
@@ -179,7 +216,8 @@ const insumos = [
   {id: {{ i.id }}, nome: "{{ i.nome }}", custo: {{ i.custo_unitario }}, unidade: "{{ i.unidade }}"},
   {% endfor %}
 ];
-const horaValor = {{ hora_com_lucro }};
+const horaValor = {{ hora_com_lucro or 0 }};
+const formasTaxa = {{ formas_pagamento | tojson }};
 
 // ── Gerar chips de tempo (10 em 10 min até 10h) ──────────────────────────────
 (function buildChips() {
@@ -206,6 +244,7 @@ function selecionarChip(min) {
   document.getElementById('prot_horas').value = min === 0 ? 0 : +(min / 60).toFixed(6);
   document.querySelectorAll('.hora-chip-pill').forEach(b =>
     b.classList.toggle('ativo', +b.dataset.min === min));
+  atualizarTotalForm();
 }
 
 function resetarChips(horas) {
@@ -223,6 +262,63 @@ function expandirChips() {
   btn.textContent  = aberto ? '+ Ver mais horários' : '− Menos horários';
 }
 
+// ── Custo total dinâmico ─────────────────────────────────────────────────────
+function atualizarTotalForm() {
+  let total = 0;
+  document.querySelectorAll('#itens-form .linha-insumo').forEach(linha => {
+    const txt = linha.querySelector('.custo-item')?.textContent || '';
+    total += parseFloat(txt.replace('R$ ','').replace(/\./g,'').replace(',','.')) || 0;
+  });
+  const horas = parseFloat(document.getElementById('prot_horas')?.value) || 0;
+  total += horas * horaValor;
+
+  const box = document.getElementById('custo-total-box');
+  const val = document.getElementById('custo-total-val');
+  if (total > 0) {
+    box.style.display = 'flex';
+    val.textContent = 'R$ ' + total.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  } else {
+    box.style.display = 'none';
+  }
+
+  // Preview lucro/margem em cada cenário
+  [1, 2, 3].forEach(n => {
+    const preco = parseFloat(document.getElementById('prot_p' + n)?.value) || 0;
+    const forma = document.getElementById('prot_pg' + n)?.value || '';
+    const taxa  = forma ? (formasTaxa[forma] || 0) : 0;
+    const lucro = preco - total - (preco * taxa / 100);
+    const margem = preco > 0 ? (lucro / preco * 100) : 0;
+    const prev = document.getElementById('cenario-preview-' + n);
+    if (!prev) return;
+    if (preco > 0) {
+      prev.style.display = 'flex';
+      prev.className = 'cenario-preview-inline' + (lucro < 0 ? ' neg' : '');
+      prev.querySelector('.cp-lucro').textContent = 'Lucro: R$ ' + lucro.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+      prev.querySelector('.cp-margem').textContent = 'Margem: ' + margem.toFixed(1) + '%';
+    } else {
+      prev.style.display = 'none';
+    }
+  });
+}
+
+// ── Farol relativo nos cards ─────────────────────────────────────────────────
+document.querySelectorAll('.cenarios').forEach(container => {
+  const cards = [...container.querySelectorAll('.cenario[data-margem]')];
+  if (!cards.length) return;
+  if (cards.length === 1) {
+    const m = parseFloat(cards[0].dataset.margem);
+    aplicarFarol(cards[0], m < 0 ? 'vermelho' : m < 20 ? 'amarelo' : 'verde');
+  } else {
+    const sorted = [...cards].sort((a, b) => parseFloat(b.dataset.margem) - parseFloat(a.dataset.margem));
+    const cores = cards.length === 2 ? ['verde', 'vermelho'] : ['verde', 'amarelo', 'vermelho'];
+    sorted.forEach((card, i) => aplicarFarol(card, cores[i] || 'vermelho'));
+  }
+});
+function aplicarFarol(card, cor) {
+  card.classList.add('cenario-' + cor);
+  card.querySelector('.cenario-farol')?.classList.add('farol-' + cor);
+}
+
 // ── Form ─────────────────────────────────────────────────────────────────────
 function toggleFormNovo() {
   const f = document.getElementById('form-novo');
@@ -233,7 +329,13 @@ function toggleFormNovo() {
   document.getElementById('prot_p1').value  = '';
   document.getElementById('prot_p2').value  = '';
   document.getElementById('prot_p3').value  = '';
+  const pg1 = document.getElementById('prot_pg1');
+  const pg2 = document.getElementById('prot_pg2');
+  const pg3 = document.getElementById('prot_pg3');
+  if (pg1) pg1.value = ''; if (pg2) pg2.value = ''; if (pg3) pg3.value = '';
   document.getElementById('itens-form').innerHTML = '';
+  document.getElementById('custo-total-box').style.display = 'none';
+  [1,2,3].forEach(n => { const p = document.getElementById('cenario-preview-'+n); if(p) p.style.display='none'; });
   resetarChips(0);
   f.style.display = 'block';
   f.scrollIntoView({behavior: 'smooth', block: 'start'});
@@ -250,6 +352,9 @@ function editarProtocolo(btn) {
   const p1    = parseFloat(btn.dataset.p1) || '';
   const p2    = parseFloat(btn.dataset.p2) || '';
   const p3    = parseFloat(btn.dataset.p3) || '';
+  const pg1   = btn.dataset.pg1 || '';
+  const pg2   = btn.dataset.pg2 || '';
+  const pg3   = btn.dataset.pg3 || '';
   const itens = JSON.parse(btn.dataset.itens || '[]');
 
   document.getElementById('form-titulo').textContent = 'Editando: ' + nome;
@@ -258,6 +363,10 @@ function editarProtocolo(btn) {
   document.getElementById('prot_p1').value   = p1;
   document.getElementById('prot_p2').value   = p2;
   document.getElementById('prot_p3').value   = p3;
+  const spg1 = document.getElementById('prot_pg1');
+  const spg2 = document.getElementById('prot_pg2');
+  const spg3 = document.getElementById('prot_pg3');
+  if (spg1) spg1.value = pg1; if (spg2) spg2.value = pg2; if (spg3) spg3.value = pg3;
 
   const itensDiv = document.getElementById('itens-form');
   itensDiv.innerHTML = '';
@@ -269,11 +378,12 @@ function editarProtocolo(btn) {
     div.innerHTML = `<select name="insumo_id" onchange="atualizarCusto(this)">${opts}</select>
       <input type="number" step="0.001" name="quantidade" placeholder="Qtd" min="0" value="${item.quantidade}" oninput="atualizarCusto(this.closest('.linha-insumo').querySelector('select'))">
       <span class="custo-item">R$ ${(item.custo).toFixed(2).replace('.', ',')}</span>
-      <button type="button" onclick="this.parentElement.remove()">✕</button>`;
+      <button type="button" onclick="removerItem(this)">✕</button>`;
     itensDiv.appendChild(div);
   });
 
   resetarChips(horas);
+  atualizarTotalForm();
   document.getElementById('form-novo').style.display = 'block';
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
@@ -286,8 +396,13 @@ function adicionarItem() {
   div.innerHTML = `<select name="insumo_id" onchange="atualizarCusto(this)">${opts}</select>
     <input type="number" step="0.001" name="quantidade" placeholder="Qtd" min="0" oninput="atualizarCusto(this.closest('.linha-insumo').querySelector('select'))">
     <span class="custo-item">R$ 0,00</span>
-    <button type="button" onclick="this.parentElement.remove()">✕</button>`;
+    <button type="button" onclick="removerItem(this)">✕</button>`;
   document.getElementById('itens-form').appendChild(div);
+}
+
+function removerItem(btn) {
+  btn.closest('.linha-insumo').remove();
+  atualizarTotalForm();
 }
 
 function atualizarCusto(sel) {
@@ -296,6 +411,7 @@ function atualizarCusto(sel) {
   const custo = parseFloat(opt.dataset.custo || 0);
   const qtd   = parseFloat(linha.querySelector('input').value || 0);
   linha.querySelector('.custo-item').textContent = 'R$ ' + (custo * qtd).toFixed(2).replace('.', ',');
+  atualizarTotalForm();
 }
 
 resetarChips(0);

@@ -89,9 +89,11 @@
     </div>
     <div class="lista-custos" id="variaveis">
       {% for c in variaveis %}
+      {% set tem_forn = c.fornecedor and c.fornecedor|trim %}
       <div class="linha-custo linha-custo-var">
         <input type="text" name="var_nome" value="{{ c.nome }}" placeholder="Descrição">
-        <input type="text" name="var_fornecedor" value="{{ c.fornecedor }}" placeholder="Fornecedor (opcional)" class="input-fornecedor">
+        <input type="text" name="var_fornecedor" value="{{ c.fornecedor or '' }}" placeholder="Fornecedor" class="input-fornecedor" {% if not tem_forn %}style="display:none"{% endif %}>
+        <button type="button" class="btn-fornecedor" onclick="toggleFornecedor(this)" {% if tem_forn %}style="display:none"{% endif %}>+ Fornecedor</button>
         <div class="custo-valor-wrap"><span class="prefix">R$</span>
           <input type="number" step="0.01" name="var_valor" value="{{ '%.2f'|format(c.valor) }}" placeholder="0,00"></div>
         <button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>
@@ -99,6 +101,28 @@
       {% endfor %}
     </div>
     <button type="button" class="btn-add" onclick="addCusto('variaveis')">+ Adicionar custo variável</button>
+  </div>
+
+  <!-- PIX e Pagamento à Vista -->
+  <div class="secao">
+    <div class="secao-header">
+      <div>
+        <h3>PIX e Pagamento à Vista</h3>
+        <p class="secao-desc">Taxa cobrada sobre o valor recebido. Use 0% se não há desconto ou custo.</p>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="campo">
+        <label>Taxa PIX (%)</label>
+        <input type="number" step="0.01" name="pix_taxa" value="{{ config.pix_taxa or 0 }}" placeholder="0,00">
+        <small class="hint">Ex: 0% se gratuito, 0,99% se cobrado pela instituição</small>
+      </div>
+      <div class="campo">
+        <label>Taxa Dinheiro / Espécie (%)</label>
+        <input type="number" step="0.01" name="dinheiro_taxa" value="{{ config.dinheiro_taxa or 0 }}" placeholder="0,00">
+        <small class="hint">Geralmente 0%. Informe se aplicar desconto ou custo operacional.</small>
+      </div>
+    </div>
   </div>
 
   <!-- Taxas de Cartão -->
@@ -198,7 +222,8 @@ function addCusto(lista, nome) {
   } else {
     div.innerHTML =
       '<input type="text" name="var_nome" value="' + (nome||'') + '" placeholder="Descrição">' +
-      '<input type="text" name="var_fornecedor" placeholder="Fornecedor (opcional)" class="input-fornecedor">' +
+      '<input type="text" name="var_fornecedor" placeholder="Fornecedor" class="input-fornecedor" style="display:none">' +
+      '<button type="button" class="btn-fornecedor" onclick="toggleFornecedor(this)">+ Fornecedor</button>' +
       '<div class="custo-valor-wrap"><span class="prefix">R$</span>' +
       '<input type="number" step="0.01" name="var_valor" placeholder="0,00"></div>' +
       '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';
@@ -221,6 +246,14 @@ function addCartao(bandeira) {
     '<button type="button" class="btn-remover" onclick="this.parentElement.remove()">✕</button>';
   document.getElementById('cartoes').appendChild(div);
   div.querySelector('input[name="cartao_taxa"]').focus();
+}
+
+function toggleFornecedor(btn) {
+  const linha = btn.closest('.linha-custo-var');
+  const campo = linha.querySelector('.input-fornecedor');
+  campo.style.display = '';
+  campo.focus();
+  btn.style.display = 'none';
 }
 
 function previewLogo(input) {

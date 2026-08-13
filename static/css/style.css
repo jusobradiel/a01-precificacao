@@ -212,11 +212,10 @@ tr:hover td{background:var(--accent2)}
 .btn-icon-excluir{background:var(--danger-bg);color:var(--danger)}
 
 /* ── Hora chips (horizontal) ── */
-.hora-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
-.hora-chip-pill{cursor:pointer}
-.hora-chip-pill span{display:inline-block;padding:6px 14px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-size:13px;color:var(--text);transition:all .15s;user-select:none}
-.hora-chip-pill span.ativo,.hora-chip-pill:hover span{background:var(--primary);color:#fff;border-color:var(--primary)}
-[data-theme="dark"] .hora-chip-pill span.ativo{background:var(--accent);border-color:var(--accent)}
+.hora-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.hora-chip-pill{cursor:pointer;display:inline-flex;align-items:center;padding:5px 13px;border-radius:20px;border:1.5px solid var(--border);background:transparent;font-size:13px;color:var(--text);transition:all .15s;user-select:none;white-space:nowrap;line-height:1.4}
+.hora-chip-pill:hover,.hora-chip-pill.ativo{background:var(--primary);color:#fff;border-color:var(--primary)}
+[data-theme="dark"] .hora-chip-pill.ativo{background:var(--accent);border-color:var(--accent)}
 
 /* ── Nav Feather icons ── */
 .sidebar nav a svg{flex-shrink:0;opacity:.85}
@@ -242,9 +241,11 @@ tr:hover td{background:var(--accent2)}
 .hint{font-size:12px;color:var(--muted);margin-top:4px;display:block;line-height:1.4}
 
 /* ── Custos variáveis com fornecedor ── */
-.linha-custo-var{flex-wrap:wrap}
-.linha-custo-var input[type=text]{flex:1;min-width:120px}
-.input-fornecedor{flex:0 0 160px !important;color:var(--muted)}
+.linha-custo-var{flex-wrap:nowrap;align-items:center}
+.linha-custo-var input[type=text]:first-of-type{flex:1;min-width:120px}
+.input-fornecedor{width:150px !important;flex:0 0 150px;font-size:13px;color:var(--muted)}
+.btn-fornecedor{background:none;border:1px dashed var(--border);border-radius:6px;padding:5px 10px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;line-height:1}
+.btn-fornecedor:hover{border-color:var(--accent);color:var(--accent)}
 
 /* ── Taxas de Cartão ── */
 .linha-cartao{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -254,8 +255,26 @@ tr:hover td{background:var(--accent2)}
 .cartao-taxa-wrap{width:190px !important}
 
 /* ── Chip expandir (protocolos) ── */
-.chip-expandir{margin-top:6px;font-size:12px}
-.hora-chips{flex-wrap:wrap}
+.chip-expandir{margin-top:8px;font-size:12px;padding:5px 14px;background:none;border:1px solid var(--border);border-radius:20px;color:var(--muted);cursor:pointer}
+.chip-expandir:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── Custo total dinâmico no form ── */
+.custo-total-preview{display:flex;align-items:center;gap:14px;background:var(--accent2);border:1px solid var(--accent);border-radius:8px;padding:12px 16px;margin-top:12px;flex-wrap:wrap}
+.custo-total-label{font-size:13px;color:var(--muted);white-space:nowrap}
+.custo-total-preview strong{font-size:18px;font-weight:800;color:var(--primary);white-space:nowrap}
+.custo-total-hint{font-size:12px;color:var(--muted);margin-left:auto}
+
+/* ── Cenário input row (form) ── */
+.cenario-input-row{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.cenario-input-label{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--muted)}
+.cenario-input-fields{display:flex;gap:12px;align-items:flex-end}
+.cenario-input-fields .campo{margin:0}
+.cenario-preview-inline{font-size:12px;color:var(--success);display:flex;gap:12px;margin-top:4px;font-weight:600}
+.cenario-preview-inline.neg{color:var(--danger)}
+
+/* ── Cenário card display ── */
+.cenario-pagto{font-size:11px;color:var(--muted);margin-bottom:2px}
+.cenario-margem{font-size:12px;color:var(--muted)}
 
 /* ── Farol de cenário ── */
 .cenario-farol{width:12px;height:12px;border-radius:50%;margin:0 auto 8px}
