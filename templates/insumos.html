@@ -28,12 +28,6 @@
       <button type="submit" class="btn-primario">Salvar insumo</button>
       <button type="button" class="btn-secundario" onclick="limparForm()">Limpar</button>
     </div>
-    <div class="sugestoes" style="margin-top:16px">
-      <span class="sugestao-label">Recomendações:</span>
-      {% for s in ["LUVA DESCARTAVEL","MASCARA DESCARTAVEL","TOUCA DESCARTAVEL","SERINGA","AGULHA","BISTURI","GAZE ESTERIL","ESPATULA","MICROPORE","ALGODAO","SORO FISIOLOGICO","ACIDO HIALURONICO","TOXINA BOTULINICA","ACIDO MANDELICO","ACIDO RETINOICO","PROTETOR SOLAR"] %}
-      <button type="button" class="chip" onclick="sugerirInsumo('{{ s }}')">{{ s }}</button>
-      {% endfor %}
-    </div>
   </form>
 </div>
 
