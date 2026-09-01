@@ -402,7 +402,7 @@ def esqueci_senha():
                 msg["From"]    = MAIL_USERNAME
                 msg["To"]      = email
                 msg.attach(MIMEText(html_body, "html", "utf-8"))
-                with smtplib.SMTP("smtp.gmail.com", 587) as server:
+                with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
                     server.starttls()
                     server.login(MAIL_USERNAME, MAIL_PASSWORD)
                     server.sendmail(MAIL_USERNAME, email, msg.as_string())
@@ -470,7 +470,7 @@ def _enviar_email_codigo(email_destino, nome, codigo):
         msg["From"]    = MAIL_USERNAME
         msg["To"]      = email_destino
         msg.attach(MIMEText(html_body, "html", "utf-8"))
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
             server.starttls()
             server.login(MAIL_USERNAME, MAIL_PASSWORD)
             server.sendmail(MAIL_USERNAME, email_destino, msg.as_string())
