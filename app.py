@@ -363,6 +363,37 @@ def logout():
 def expirado():
     return render_template("expirado.html")
 
+def _enviar_email_reset(email_destino, link):
+    try:
+        html_body = f"""
+        <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
+          <p style="font-size:15px;color:#1A2E38">Olá!</p>
+          <p style="font-size:14px;color:#5A7A8A;margin-bottom:24px">
+            Recebemos uma solicitação para redefinir a senha da sua conta.
+            Clique no botão abaixo — o link é válido por <strong>1 hora</strong>.
+          </p>
+          <a href="{link}"
+             style="display:inline-block;background:#0F3A4A;color:white;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none">
+            Redefinir minha senha
+          </a>
+          <p style="font-size:12px;color:#8A9AAA;margin-top:24px">
+            Se você não solicitou isso, ignore este e-mail. Nenhuma alteração foi feita.
+          </p>
+          <hr style="border:none;border-top:1px solid #D0DDE3;margin:24px 0">
+          <p style="font-size:12px;color:#8A9AAA">A'01 Negócios — Precificação de Serviços</p>
+        </div>"""
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Redefinição de senha — Precificação de Serviços"
+        msg["From"]    = MAIL_USERNAME
+        msg["To"]      = email_destino
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
+            server.login(MAIL_USERNAME, MAIL_PASSWORD)
+            server.sendmail(MAIL_USERNAME, email_destino, msg.as_string())
+    except Exception:
+        pass
+
 @app.route("/esqueci-senha", methods=["GET", "POST"])
 def esqueci_senha():
     if request.method == "POST":
@@ -372,45 +403,27 @@ def esqueci_senha():
         email   = request.form.get("email", "").strip().lower()
         usuario = Usuario.query.filter_by(email=email).first()
         if usuario:
-            PasswordResetToken.query.filter_by(usuario_id=usuario.id).delete()
-            token     = secrets.token_urlsafe(40)
-            expiracao = datetime.utcnow() + timedelta(hours=1)
-            db.session.add(PasswordResetToken(
-                usuario_id=usuario.id, token=token, expiracao=expiracao))
-            db.session.commit()
-            link = url_for("resetar_senha", token=token, _external=True)
             try:
-                html_body = f"""
-                <div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px">
-                  <p style="font-size:15px;color:#1A2E38">Olá!</p>
-                  <p style="font-size:14px;color:#5A7A8A;margin-bottom:24px">
-                    Recebemos uma solicitação para redefinir a senha da sua conta.
-                    Clique no botão abaixo — o link é válido por <strong>1 hora</strong>.
-                  </p>
-                  <a href="{link}"
-                     style="display:inline-block;background:#0F3A4A;color:white;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none">
-                    Redefinir minha senha
-                  </a>
-                  <p style="font-size:12px;color:#8A9AAA;margin-top:24px">
-                    Se você não solicitou isso, ignore este e-mail. Nenhuma alteração foi feita.
-                  </p>
-                  <hr style="border:none;border-top:1px solid #D0DDE3;margin:24px 0">
-                  <p style="font-size:12px;color:#8A9AAA">A'01 Negócios — Precificação de Serviços</p>
-                </div>"""
-                msg = MIMEMultipart("alternative")
-                msg["Subject"] = "Redefinição de senha — Precificação de Serviços"
-                msg["From"]    = MAIL_USERNAME
-                msg["To"]      = email
-                msg.attach(MIMEText(html_body, "html", "utf-8"))
-                with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-                    server.starttls()
-                    server.login(MAIL_USERNAME, MAIL_PASSWORD)
-                    server.sendmail(MAIL_USERNAME, email, msg.as_string())
+                PasswordResetToken.query.filter_by(usuario_id=usuario.id).delete()
+                token     = secrets.token_urlsafe(40)
+                expiracao = datetime.utcnow() + timedelta(hours=1)
+                db.session.add(PasswordResetToken(
+                    usuario_id=usuario.id, token=token, expiracao=expiracao))
+                db.session.commit()
+                link = url_for("resetar_senha", token=token, _external=True)
+                threading.Thread(
+                    target=_enviar_email_reset,
+                    args=(email, link),
+                    daemon=True,
+                ).start()
             except Exception:
-                pass
-        flash("Se o e-mail estiver cadastrado, você receberá um link em instantes.", "success")
-        return redirect(url_for("esqueci_senha"))
+                db.session.rollback()
+        return redirect(url_for("email_enviado"))
     return render_template("esqueci_senha.html")
+
+@app.route("/email-enviado")
+def email_enviado():
+    return render_template("email_enviado.html")
 
 @app.route("/resetar-senha/<token>", methods=["GET", "POST"])
 def resetar_senha(token):
