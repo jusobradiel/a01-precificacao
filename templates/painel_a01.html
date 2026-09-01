@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block conteudo %}
-<h1>Painel A'01 — Clientes</h1>
+<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:4px">
+  <h1 style="margin:0">Painel A'01 — Clientes</h1>
+  <a href="{{ url_for('painel_codigos') }}" class="btn-primario" style="font-size:13px;padding:8px 16px">Códigos de acesso →</a>
+</div>
 
 <div class="painel-stats">
   <div class="pstat"><div class="pstat-num">{{ total_ativos }}</div><div class="pstat-label">Ativos</div></div>

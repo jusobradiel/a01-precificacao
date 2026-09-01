@@ -10,7 +10,7 @@
 
 <div class="stat-grid">
   <a href="{{ url_for('configuracoes') }}" class="stat" style="text-decoration:none">
-    <div class="stat-label">Hora Clínica</div>
+    <div class="stat-label">Custo por Hora</div>
     {% if hora_lucro %}
     <div class="stat-valor">{{ hora_lucro | brl }}</div>
     <div style="font-size:12px;color:var(--muted);margin-top:4px">por hora</div>
@@ -28,9 +28,28 @@
   <a href="{{ url_for('protocolos') }}" class="stat" style="text-decoration:none">
     <div class="stat-label">Fichas Técnicas</div>
     <div class="stat-valor">{{ total_protocolos }}</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:4px">cadastrados</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">cadastradas</div>
   </a>
 </div>
+
+{% if melhor_margem or mais_lucrativo %}
+<div class="stat-grid" style="margin-top:12px">
+  {% if melhor_margem %}
+  <a href="{{ url_for('protocolos') }}" class="stat" style="text-decoration:none;border-color:var(--primary);border-width:2px">
+    <div class="stat-label">Maior Margem</div>
+    <div class="stat-valor" style="font-size:22px">{{ "%.1f"|format(melhor_margem.margem) }}%</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">{{ melhor_margem.nome }} · vendendo a {{ melhor_margem.preco | brl }}</div>
+  </a>
+  {% endif %}
+  {% if mais_lucrativo %}
+  <a href="{{ url_for('protocolos') }}" class="stat" style="text-decoration:none;border-color:#1A7A4A;border-width:2px">
+    <div class="stat-label">Mais Lucrativo</div>
+    <div class="stat-valor" style="font-size:22px;color:#1A7A4A">{{ mais_lucrativo.lucro | brl }}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">{{ mais_lucrativo.nome }} · de lucro por ficha</div>
+  </a>
+  {% endif %}
+</div>
+{% endif %}
 
 <div class="secao">
   <h3>Por onde começar?</h3>

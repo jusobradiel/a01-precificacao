@@ -1,11 +1,11 @@
-import os, json, base64, threading, webbrowser, secrets, smtplib, time
+import os, json, base64, threading, webbrowser, secrets, smtplib, time, hmac, hashlib
 from collections import defaultdict
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime, timedelta
 from functools import wraps
 
-from flask import Flask, render_template, request, redirect, url_for, session, flash
+from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -23,9 +23,10 @@ app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024
 
-MAIL_USERNAME   = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
-MAIL_PASSWORD   = os.environ.get("MAIL_PASSWORD", "")
-CODIGO_ACESSO   = os.environ.get("CODIGO_ACESSO", "")
+MAIL_USERNAME    = os.environ.get("MAIL_USERNAME", "a01affonso@gmail.com")
+MAIL_PASSWORD    = os.environ.get("MAIL_PASSWORD", "")
+CODIGO_ACESSO    = os.environ.get("CODIGO_ACESSO", "")
+HOTMART_HOTTOK   = os.environ.get("HOTMART_HOTTOK", "")
 
 db = SQLAlchemy(app)
 
@@ -116,6 +117,18 @@ class Insumo(db.Model):
             return self.custo_embalagem / self.qtd_embalagem
         return 0
 
+class CodigoAcesso(db.Model):
+    __tablename__      = "codigo_acesso"
+    id                 = db.Column(db.Integer, primary_key=True)
+    codigo             = db.Column(db.String(32), unique=True, nullable=False)
+    email_comprador    = db.Column(db.String(200))
+    nome_comprador     = db.Column(db.String(200))
+    transacao_hotmart  = db.Column(db.String(100))
+    usado              = db.Column(db.Boolean, default=False)
+    email_usado_por    = db.Column(db.String(200))
+    criado_em          = db.Column(db.DateTime, default=datetime.utcnow)
+    usado_em           = db.Column(db.DateTime)
+
 class Protocolo(db.Model):
     __tablename__ = "protocolo"
     id            = db.Column(db.Integer, primary_key=True)
@@ -180,7 +193,7 @@ app.jinja_env.globals["csrf_token"] = gerar_csrf_token
 
 @app.before_request
 def verificar_csrf():
-    if request.method == "POST":
+    if request.method == "POST" and not request.path.startswith("/webhook/"):
         token = session.get("_csrf_token")
         if not token or token != request.form.get("_csrf_token"):
             abort(403)
@@ -261,7 +274,9 @@ def registro():
         conf  = request.form.get("confirmar_senha", "")
 
         codigo = request.form.get("codigo_acesso", "").strip()
-        if not CODIGO_ACESSO or codigo != CODIGO_ACESSO:
+        codigo_db = CodigoAcesso.query.filter_by(codigo=codigo, usado=False).first()
+        codigo_admin = CODIGO_ACESSO and codigo == CODIGO_ACESSO
+        if not codigo_db and not codigo_admin:
             flash("Código de acesso inválido.", "error")
             return render_template("registro.html")
         if not nome or not email or not senha:
@@ -290,6 +305,11 @@ def registro():
         config = Configuracao(tenant_id=tenant.id, nome_clinica=nome)
         db.session.add(config)
         db.session.commit()
+
+        if codigo_db:
+            codigo_db.usado = True
+            codigo_db.email_usado_por = email
+            codigo_db.usado_em = datetime.utcnow()
 
         session["usuario_id"]     = usuario.id
         session["tenant_id"]      = tenant.id
@@ -415,6 +435,95 @@ def resetar_senha(token):
         return redirect(url_for("login"))
     return render_template("resetar_senha.html", token=token)
 
+# ── Webhook Hotmart ───────────────────────────────────────────────────────────
+
+def _enviar_email_codigo(email_destino, nome, codigo):
+    try:
+        link_registro = "https://app.precifiquemud.com.br/registro"
+        html_body = f"""
+        <div style="font-family:system-ui,sans-serif;max-width:520px;margin:0 auto;padding:32px 24px">
+          <div style="background:#0F3A4A;border-radius:10px;padding:24px;text-align:center;margin-bottom:24px">
+            <p style="color:#E8B04A;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin:0 0 6px">Precifique MUD</p>
+            <p style="color:#fff;font-size:22px;font-weight:700;margin:0">Seu acesso está pronto</p>
+          </div>
+          <p style="font-size:15px;color:#1A2E38">Olá, {nome}!</p>
+          <p style="font-size:14px;color:#5A7A8A;line-height:1.6;margin-bottom:24px">
+            Sua compra foi confirmada. Use o código abaixo para criar sua conta no sistema de precificação.
+          </p>
+          <div style="background:#F4F7F9;border:1px solid #D0DDE3;border-radius:8px;padding:20px;text-align:center;margin-bottom:24px">
+            <p style="font-size:11px;color:#5A7A8A;margin:0 0 8px;text-transform:uppercase;letter-spacing:.08em">Seu código de acesso</p>
+            <p style="font-family:monospace;font-size:26px;font-weight:700;color:#C4922F;margin:0;letter-spacing:.1em">{codigo}</p>
+          </div>
+          <a href="{link_registro}"
+             style="display:block;background:#0F3A4A;color:white;padding:14px 28px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;text-align:center;margin-bottom:24px">
+            Criar minha conta →
+          </a>
+          <p style="font-size:12px;color:#8A9AAA;line-height:1.6">
+            Acesse <a href="{link_registro}" style="color:#C4922F">{link_registro}</a>, clique em "Criar conta" e informe o código acima.<br>
+            Este código é de uso único e pessoal.
+          </p>
+          <hr style="border:none;border-top:1px solid #D0DDE3;margin:24px 0">
+          <p style="font-size:12px;color:#8A9AAA">A'01 Negócios — Precificação de Serviços</p>
+        </div>"""
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Seu código de acesso — Precifique MUD"
+        msg["From"]    = MAIL_USERNAME
+        msg["To"]      = email_destino
+        msg.attach(MIMEText(html_body, "html", "utf-8"))
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(MAIL_USERNAME, MAIL_PASSWORD)
+            server.sendmail(MAIL_USERNAME, email_destino, msg.as_string())
+    except Exception:
+        pass
+
+@app.route("/webhook/hotmart", methods=["POST"])
+def webhook_hotmart():
+    if HOTMART_HOTTOK:
+        token_recebido = request.headers.get("X-Hotmart-Webhook-Token", "")
+        if token_recebido != HOTMART_HOTTOK:
+            abort(403)
+    try:
+        payload = request.get_json(force=True) or {}
+    except Exception:
+        abort(400)
+
+    evento = payload.get("event", "")
+    if evento not in ("PURCHASE_APPROVED", "PURCHASE_COMPLETE"):
+        return "", 200
+
+    buyer = payload.get("data", {}).get("buyer", {})
+    email_comprador = buyer.get("email", "").strip().lower()
+    nome_comprador  = buyer.get("name", "").strip()
+    transacao       = payload.get("data", {}).get("purchase", {}).get("transaction", "")
+
+    if not email_comprador:
+        return "", 200
+
+    if transacao and CodigoAcesso.query.filter_by(transacao_hotmart=transacao).first():
+        return "", 200
+
+    codigo = secrets.token_hex(5).upper()
+    while CodigoAcesso.query.filter_by(codigo=codigo).first():
+        codigo = secrets.token_hex(5).upper()
+
+    novo = CodigoAcesso(
+        codigo=codigo,
+        email_comprador=email_comprador,
+        nome_comprador=nome_comprador,
+        transacao_hotmart=transacao,
+    )
+    db.session.add(novo)
+    db.session.commit()
+
+    threading.Thread(
+        target=_enviar_email_codigo,
+        args=(email_comprador, nome_comprador or "cliente", codigo),
+        daemon=True,
+    ).start()
+
+    return "", 200
+
 # ── Painel A'01 (super admin) ─────────────────────────────────────────────────
 
 @app.route("/painel-a01")
@@ -438,6 +547,47 @@ def painel_a01():
     return render_template("painel_a01.html", data=data,
                            total_ativos=total_ativos, total_trial=total_trial,
                            total_expirados=total_expirados)
+
+@app.route("/painel-a01/codigos")
+@login_required
+@super_admin_required
+def painel_codigos():
+    codigos = CodigoAcesso.query.order_by(CodigoAcesso.criado_em.desc()).all()
+    return render_template("painel_codigos.html", codigos=codigos)
+
+@app.route("/painel-a01/codigos/gerar", methods=["POST"])
+@login_required
+@super_admin_required
+def gerar_codigo():
+    email_destino = request.form.get("email", "").strip().lower()
+    nome_destino  = request.form.get("nome", "").strip()
+    codigo = secrets.token_hex(5).upper()
+    while CodigoAcesso.query.filter_by(codigo=codigo).first():
+        codigo = secrets.token_hex(5).upper()
+    novo = CodigoAcesso(codigo=codigo, email_comprador=email_destino, nome_comprador=nome_destino)
+    db.session.add(novo)
+    db.session.commit()
+    if email_destino:
+        threading.Thread(
+            target=_enviar_email_codigo,
+            args=(email_destino, nome_destino or "cliente", codigo),
+            daemon=True,
+        ).start()
+        flash(f"Código {codigo} gerado e enviado para {email_destino}.", "success")
+    else:
+        flash(f"Código gerado: {codigo}", "success")
+    return redirect(url_for("painel_codigos"))
+
+@app.route("/painel-a01/codigos/excluir/<int:cid>", methods=["POST"])
+@login_required
+@super_admin_required
+def excluir_codigo(cid):
+    c = db.session.get(CodigoAcesso, cid)
+    if c and not c.usado:
+        db.session.delete(c)
+        db.session.commit()
+        flash("Código removido.", "success")
+    return redirect(url_for("painel_codigos"))
 
 @app.route("/painel-a01/ativar/<int:tid>", methods=["POST"])
 @login_required
@@ -501,9 +651,27 @@ def dashboard():
     _, hora_lucro    = calcular_hora_clinica(config)
     total_protocolos = Protocolo.query.filter_by(tenant_id=tid).count()
     total_insumos    = Insumo.query.filter_by(tenant_id=tid).count()
+
+    melhor_margem  = None
+    mais_lucrativo = None
+    for p in Protocolo.query.filter_by(tenant_id=tid).all():
+        itens      = json.loads(p.itens_json or "[]")
+        custo_ins  = sum(i.get("custo", 0) for i in itens)
+        custo_hora = (p.horas_clinica or 0) * hora_lucro
+        custo_total = custo_ins + custo_hora
+        for preco in [p.preco1, p.preco2, p.preco3]:
+            if preco and preco > 0 and custo_total > 0:
+                lucro  = preco - custo_total
+                margem = (lucro / preco * 100) if preco > 0 else 0
+                if melhor_margem is None or margem > melhor_margem["margem"]:
+                    melhor_margem = {"nome": p.nome, "margem": margem, "preco": preco}
+                if mais_lucrativo is None or lucro > mais_lucrativo["lucro"]:
+                    mais_lucrativo = {"nome": p.nome, "lucro": lucro, "preco": preco}
+
     return render_template("dashboard.html", hora_lucro=hora_lucro,
                            total_protocolos=total_protocolos,
-                           total_insumos=total_insumos, config=config)
+                           total_insumos=total_insumos, config=config,
+                           melhor_margem=melhor_margem, mais_lucrativo=mais_lucrativo)
 
 # ── Configurações ─────────────────────────────────────────────────────────────
 

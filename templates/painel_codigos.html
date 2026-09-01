@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block conteudo %}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+  <div>
+    <h1 style="margin:0">Códigos de Acesso</h1>
+    <p style="color:#5A7A8A;font-size:14px;margin:4px 0 0">Gerados pelo webhook da Hotmart ou manualmente</p>
+  </div>
+  <a href="{{ url_for('painel_a01') }}" style="font-size:13px;color:#5A7A8A">← Voltar ao painel</a>
+</div>
+
+<!-- Gerar código manual -->
+<div class="secao" style="margin-bottom:24px">
+  <h3 style="margin-bottom:16px">Gerar código manual</h3>
+  <form method="POST" action="{{ url_for('gerar_codigo') }}">
+    <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+      <div class="campo" style="margin:0;flex:1;min-width:200px">
+        <label>Nome do cliente (opcional)</label>
+        <input type="text" name="nome" placeholder="Ex: Dra. Ana Carvalho">
+      </div>
+      <div class="campo" style="margin:0;flex:1;min-width:200px">
+        <label>E-mail para envio (opcional)</label>
+        <input type="email" name="email" placeholder="cliente@email.com">
+      </div>
+      <button type="submit" class="btn-primario" style="white-space:nowrap;margin-bottom:0">Gerar código →</button>
+    </div>
+    <p style="font-size:12px;color:#8A9AAA;margin-top:8px">Se informar e-mail, o código será enviado automaticamente.</p>
+  </form>
+</div>
+
+<!-- Lista de códigos -->
+<div class="secao">
+  <h3 style="margin-bottom:16px">Todos os códigos <span style="font-size:13px;font-weight:400;color:#5A7A8A">({{ codigos|length }} total)</span></h3>
+  {% if not codigos %}
+    <p style="color:#5A7A8A;font-size:14px">Nenhum código gerado ainda.</p>
+  {% else %}
+  <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:13px">
+      <thead>
+        <tr style="border-bottom:2px solid #D0DDE3;text-align:left">
+          <th style="padding:8px 12px;color:#5A7A8A;font-weight:600;white-space:nowrap">Código</th>
+          <th style="padding:8px 12px;color:#5A7A8A;font-weight:600">Status</th>
+          <th style="padding:8px 12px;color:#5A7A8A;font-weight:600">Comprador</th>
+          <th style="padding:8px 12px;color:#5A7A8A;font-weight:600">Usado por</th>
+          <th style="padding:8px 12px;color:#5A7A8A;font-weight:600;white-space:nowrap">Criado em</th>
+          <th style="padding:8px 12px;color:#5A7A8A;font-weight:600">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for c in codigos %}
+        <tr style="border-bottom:1px solid #EEF2F4">
+          <td style="padding:10px 12px">
+            <code style="font-family:monospace;font-size:14px;font-weight:700;color:#C4922F;background:#FEF7EC;padding:2px 8px;border-radius:4px">{{ c.codigo }}</code>
+          </td>
+          <td style="padding:10px 12px">
+            {% if c.usado %}
+              <span style="font-size:11px;font-weight:600;background:#D1EDE0;color:#1A7A4A;padding:2px 8px;border-radius:4px">Usado</span>
+            {% else %}
+              <span style="font-size:11px;font-weight:600;background:#E8F4F9;color:#0F3A4A;padding:2px 8px;border-radius:4px">Disponível</span>
+            {% endif %}
+          </td>
+          <td style="padding:10px 12px;color:#1A2E38">
+            {% if c.nome_comprador %}<strong>{{ c.nome_comprador }}</strong><br>{% endif %}
+            {% if c.email_comprador %}<span style="color:#5A7A8A">{{ c.email_comprador }}</span>{% else %}<span style="color:#B0B8C0">—</span>{% endif %}
+          </td>
+          <td style="padding:10px 12px;color:#5A7A8A">
+            {{ c.email_usado_por or '—' }}
+          </td>
+          <td style="padding:10px 12px;color:#5A7A8A;white-space:nowrap">
+            {{ c.criado_em.strftime('%d/%m/%Y %H:%M') if c.criado_em else '—' }}
+          </td>
+          <td style="padding:10px 12px">
+            {% if not c.usado %}
+            <form method="POST" action="{{ url_for('excluir_codigo', cid=c.id) }}" style="display:inline" onsubmit="return confirm('Remover este código?')">
+              <input type="hidden" name="_csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" style="background:none;border:none;color:#B03020;cursor:pointer;font-size:13px;padding:0">Remover</button>
+            </form>
+            {% else %}
+            <span style="color:#B0B8C0;font-size:13px">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
