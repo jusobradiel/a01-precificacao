@@ -537,6 +537,52 @@ def webhook_hotmart():
 
     return "", 200
 
+@app.route("/webhook/kiwify", methods=["POST"])
+def webhook_kiwify():
+    try:
+        payload = request.get_json(force=True) or {}
+    except Exception:
+        abort(400)
+
+    kiwify_token = os.environ.get("KIWIFY_TOKEN", "")
+    if kiwify_token and payload.get("token", "") != kiwify_token:
+        abort(403)
+
+    if payload.get("status", "") != "paid":
+        return "", 200
+
+    customer        = payload.get("customer", {})
+    email_comprador = customer.get("email", "").strip().lower()
+    nome_comprador  = customer.get("name", "").strip()
+    order_id        = payload.get("order_id", "")
+
+    if not email_comprador:
+        return "", 200
+
+    if order_id and CodigoAcesso.query.filter_by(transacao_hotmart=order_id).first():
+        return "", 200
+
+    codigo = secrets.token_hex(5).upper()
+    while CodigoAcesso.query.filter_by(codigo=codigo).first():
+        codigo = secrets.token_hex(5).upper()
+
+    novo = CodigoAcesso(
+        codigo=codigo,
+        email_comprador=email_comprador,
+        nome_comprador=nome_comprador,
+        transacao_hotmart=order_id,
+    )
+    db.session.add(novo)
+    db.session.commit()
+
+    threading.Thread(
+        target=_enviar_email_codigo,
+        args=(email_comprador, nome_comprador or "cliente", codigo),
+        daemon=True,
+    ).start()
+
+    return "", 200
+
 # ── Painel A'01 (super admin) ─────────────────────────────────────────────────
 
 @app.route("/painel-a01")
