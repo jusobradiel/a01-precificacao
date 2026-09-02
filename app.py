@@ -602,6 +602,32 @@ def excluir_codigo(cid):
         flash("Código removido.", "success")
     return redirect(url_for("painel_codigos"))
 
+@app.route("/painel-a01/testar-email")
+@login_required
+@super_admin_required
+def testar_email():
+    resultado = "não testado"
+    try:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
+            server.starttls()
+            server.login(MAIL_USERNAME, MAIL_PASSWORD)
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = "Teste de e-mail — Precifique MUD"
+            msg["From"]    = MAIL_USERNAME
+            msg["To"]      = MAIL_USERNAME
+            msg.attach(MIMEText("<p>E-mail de teste enviado com sucesso!</p>", "html", "utf-8"))
+            server.sendmail(MAIL_USERNAME, MAIL_USERNAME, msg.as_string())
+        resultado = "✅ Sucesso! E-mail enviado para " + MAIL_USERNAME
+    except Exception as e:
+        resultado = f"❌ Erro: {e}"
+    return f"""<html><body style='font-family:sans-serif;padding:40px'>
+        <h2>Teste de E-mail SMTP</h2>
+        <p><strong>MAIL_USERNAME:</strong> {MAIL_USERNAME}</p>
+        <p><strong>MAIL_PASSWORD configurado:</strong> {'Sim (' + str(len(MAIL_PASSWORD)) + ' chars)' if MAIL_PASSWORD else 'NÃO'}</p>
+        <p style='font-size:18px'>{resultado}</p>
+        <a href='/painel-a01'>← Voltar ao painel</a>
+    </body></html>"""
+
 @app.route("/painel-a01/ativar/<int:tid>", methods=["POST"])
 @login_required
 @super_admin_required
